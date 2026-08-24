@@ -1,0 +1,2672 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modelador e Minimizador de AFD Interativo</title>
+    <!-- Tailwind CSS com suporte a classe dark -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .title-font {
+            font-family: 'Outfit', sans-serif;
+        }
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+        canvas {
+            touch-action: none;
+        }
+        :focus-visible {
+            outline: 3px solid #06b6d4 !important;
+            outline-offset: 2px !important;
+            box-shadow: 0 0 0 5px rgba(6, 182, 212, 0.4) !important;
+        }
+        .toolbar-compact .btn-text {
+            display: none !important;
+        }
+        .toolbar-compact .toolbar-label {
+            display: none !important;
+        }
+        .toolbar-compact button {
+            padding: 0.375rem !important;
+            height: 1.875rem;
+            width: 1.875rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.375rem !important;
+        }
+        .toolbar-compact #btn-draw-mode {
+            width: auto !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            gap: 0.25rem !important;
+        }
+        .dist-matrix-cell {
+            transition: all 0.15s ease;
+        }
+        .dist-matrix-cell:hover {
+            transform: scale(1.06);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950 transition-colors duration-200">
+
+    <!-- Cabeçalho Principal -->
+    <header class="border-b border-slate-200 dark:border-slate-900 bg-white/80 dark:bg-slate-900/60 backdrop-blur-md sticky top-0 z-40 p-3 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-cyan-500/10 p-2 rounded-xl border border-cyan-500/30 shadow-inner">
+                    <svg class="w-6 h-6 text-cyan-500 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-base font-extrabold tracking-wider text-cyan-600 dark:text-cyan-400 code-font uppercase">Modelador e Minimizador de AFD</h1>
+                        <span class="bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-cyan-500/30">Visão Integrada Grafo + Tabela</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Grafo simultâneo com a Matriz Triangular de Distinguibilidade e Refinamento de Partições</p>
+                </div>
+            </div>
+
+            <!-- Exemplos e Ações Rápidas -->
+            <div class="flex items-center gap-2 flex-wrap justify-center">
+                <!-- Exemplos Didáticos -->
+                <div class="flex flex-wrap items-center gap-1 bg-slate-200/60 dark:bg-slate-900 p-1 rounded-xl border border-slate-300/50 dark:border-slate-800 transition-colors duration-200">
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400 px-1.5 font-semibold shrink-0">Exemplos:</span>
+                    <button onclick="loadExample('classic6')" class="text-xs bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg transition shadow-sm dark:shadow-none shrink-0 border border-slate-200 dark:border-slate-700/50 font-medium">Clássico (6 nós)</button>
+                    <button onclick="loadExample('parity6')" class="text-xs bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg transition shadow-sm dark:shadow-none shrink-0 border border-slate-200 dark:border-slate-700/50 font-medium">Paridade Redundante</button>
+                    <button onclick="loadExample('mod3_7')" class="text-xs bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg transition shadow-sm dark:shadow-none shrink-0 border border-slate-200 dark:border-slate-700/50 font-medium">Divisível por 3</button>
+                    <button onclick="loadExample('minimal3')" class="text-xs bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg transition shadow-sm dark:shadow-none shrink-0 border border-slate-200 dark:border-slate-700/50 font-medium">Já Mínimo</button>
+                </div>
+
+                <!-- Arquivo (JSON Import/Export) -->
+                <div class="flex items-center gap-1 bg-slate-200/60 dark:bg-slate-900 p-1 rounded-xl border border-slate-300/50 dark:border-slate-800 transition-colors duration-200">
+                    <button onclick="exportToJSON()" class="text-xs bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg transition shadow-sm dark:shadow-none font-medium flex items-center gap-1" title="Exportar autômato como JSON">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        JSON
+                    </button>
+                    <button onclick="document.getElementById('import-json-input').click()" class="text-xs bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-cyan-600 dark:hover:text-cyan-400 text-slate-700 dark:text-slate-200 px-2 py-1 rounded-lg transition shadow-sm dark:shadow-none font-medium flex items-center gap-1" title="Importar autômato de um JSON">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        Abrir
+                    </button>
+                    <input type="file" id="import-json-input" accept=".json" onchange="importFromJSON(event)" class="hidden">
+                </div>
+
+                <!-- Botão de Alternância de Tema -->
+                <button onclick="toggleTheme()" id="theme-toggle-btn" class="p-2 rounded-xl bg-slate-200/60 dark:bg-slate-900 hover:bg-slate-300/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300/50 dark:border-slate-800 transition duration-200" title="Alternar Tema">
+                    <svg id="theme-sun" class="w-4 h-4 hidden" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2"></path>
+                        <path d="M12 20v2"></path>
+                        <path d="m4.93 4.93 1.41 1.41"></path>
+                        <path d="m17.66 17.66 1.41 1.41"></path>
+                        <path d="M2 12h2"></path>
+                        <path d="M20 12h2"></path>
+                        <path d="m6.34 17.66-1.41 1.41"></path>
+                        <path d="m19.07 4.93-1.41 1.41"></path>
+                    </svg>
+                    <svg id="theme-moon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ÁREA DE TRABALHO PRINCIPAL INTEGRADA: GRAFO LADO A LADO COM A MINIMIZAÇÃO -->
+    <main class="max-w-7xl w-full mx-auto p-3 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch my-1">
+        
+        <!-- ==================== COLUNA ESQUERDA: GRAFO DO AFD & DEFINIÇÃO (6 Colunas) ==================== -->
+        <section class="lg:col-span-6 flex flex-col gap-3">
+            
+            <!-- Card do Canvas do Grafo -->
+            <div class="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-900 rounded-2xl flex flex-col overflow-hidden shadow-sm dark:shadow-none transition-colors duration-200 h-[430px] relative">
+                
+                <!-- Barra de Ferramentas do Canvas -->
+                <div class="p-2 bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-900 flex flex-wrap items-center justify-between gap-1.5 z-10 shrink-0">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider code-font font-bold flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-cyan-500"></span> Grafo do AFD
+                        </span>
+                        <span id="canvas-active-pair-badge" class="hidden text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 animate-pulse">
+                            Comparando (p, q)
+                        </span>
+                    </div>
+
+                    <div id="graph-toolbar-controls" class="flex items-center gap-1 flex-wrap">
+                        <button id="btn-draw-mode" onclick="toggleDrawMode()" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] px-2 py-1 rounded-lg transition border border-slate-300/40 dark:border-slate-700 flex items-center gap-1" title="Alternar Mover / Criar Transições">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500 shrink-0" id="draw-mode-indicator"></span>
+                            <span class="btn-text">Mover</span>
+                        </button>
+                        
+                        <button onclick="autoLayoutCircle()" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] px-2 py-1 rounded-lg transition" title="Layout em Círculo">
+                            <span class="btn-text">Círculo</span>
+                        </button>
+
+                        <button onclick="layoutGrid()" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] px-2 py-1 rounded-lg transition" title="Layout em Grade">
+                            <span class="btn-text">Grade</span>
+                        </button>
+
+                        <button onclick="manualCenterGraph()" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] px-2 py-1 rounded-lg transition" title="Centralizar">
+                            <span class="btn-text">Centralizar</span>
+                        </button>
+
+                        <button onclick="undo()" id="btn-undo" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] px-1.5 py-1 rounded-lg transition disabled:opacity-40" title="Desfazer" disabled>↩</button>
+                        <button onclick="redo()" id="btn-redo" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] px-1.5 py-1 rounded-lg transition disabled:opacity-40" title="Refazer" disabled>↪</button>
+
+                        <button onclick="exportToPNG('dark')" class="bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 text-[11px] px-2 py-1 rounded-lg transition font-semibold" title="Exportar PNG">PNG</button>
+                        <button onclick="exportToTikZ()" class="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 text-[11px] px-2 py-1 rounded-lg transition font-semibold" title="Exportar TikZ">TikZ</button>
+                    </div>
+                </div>
+
+                <!-- Canvas -->
+                <div class="relative w-full flex-grow bg-slate-100/50 dark:bg-slate-950/80 transition-colors duration-200" id="canvas-container">
+                    <canvas id="automaton-canvas" class="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+                </div>
+                
+                <!-- Dica rápida de atalhos -->
+                <div class="p-1.5 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 text-[10px] text-center text-slate-400 dark:text-slate-500 shrink-0">
+                    💡 Duplo clique no vazio: cria estado • Duplo clique no nó: altera aceitação • Shift+Arrastar: liga transição • Botão direito: opções.
+                </div>
+            </div>
+
+            <!-- Abas Inferiores da Coluna Esquerda: Definição & Tabela δ / Simulador / Diagnóstico -->
+            <div class="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-900 p-3.5 rounded-2xl shadow-sm dark:shadow-none flex flex-col gap-3">
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                    <div class="flex gap-2">
+                        <button onclick="switchLeftSubTab('delta')" id="left-subtab-delta" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 transition">
+                            Tabela de Transição (δ)
+                        </button>
+                        <button onclick="switchLeftSubTab('simulator')" id="left-subtab-simulator" class="px-2.5 py-1 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                            Testar Cadeias
+                        </button>
+                        <button onclick="switchLeftSubTab('diag')" id="left-subtab-diag" class="px-2.5 py-1 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                            Diagnóstico
+                        </button>
+                    </div>
+
+                    <button onclick="handleAddStateClick()" class="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 text-[11px] px-2 py-1 rounded-lg transition font-semibold">
+                        + Estado
+                    </button>
+                </div>
+
+                <!-- Sub-painel 1: Tabela δ e Alfabeto -->
+                <div id="left-panel-delta" class="flex flex-col gap-2.5">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase code-font">Σ Alfabeto:</span>
+                        <input type="text" id="alphabet-input" value="0, 1" onchange="updateAlphabet()" class="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-cyan-500 rounded-lg px-2 py-1 text-xs outline-none text-slate-800 dark:text-slate-100 font-mono font-bold flex-grow">
+                        <button onclick="updateAlphabet()" class="bg-slate-200 dark:bg-slate-800 text-[10px] px-2.5 py-1 rounded-lg font-bold">Aplicar</button>
+                    </div>
+
+                    <div class="overflow-x-auto max-h-[170px] overflow-y-auto pr-1">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
+                                    <th class="py-1">Estado</th>
+                                    <th class="py-1 text-center">Inicial</th>
+                                    <th class="py-1 text-center">Final</th>
+                                    <th class="py-1 pl-2">Transições (δ)</th>
+                                    <th class="py-1 text-center">Excluir</th>
+                                </tr>
+                            </thead>
+                            <tbody id="state-table-body" class="divide-y divide-slate-100 dark:divide-slate-900/40"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="flex justify-between items-center text-[11px] text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <span>Total de Estados: <strong id="state-count" class="text-slate-600 dark:text-slate-300 font-mono">0</strong></span>
+                        <button onclick="clearAutomaton()" class="text-rose-500 hover:underline">Limpar Grafo</button>
+                    </div>
+                </div>
+
+                <!-- Sub-painel 2: Simulador de Cadeias -->
+                <div id="left-panel-simulator" class="hidden flex flex-col gap-2">
+                    <div class="flex gap-2">
+                        <input type="text" id="simulation-input" class="bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-1.5 text-xs outline-none text-slate-800 dark:text-slate-100 flex-grow code-font font-bold tracking-widest" placeholder="Digite uma cadeia (ex: 0101)">
+                        <button onclick="runFastSimulation()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs px-3 py-1.5 rounded-xl transition shadow-sm">
+                            Testar
+                        </button>
+                        <button onclick="startStepByStep()" class="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs px-3 py-1.5 rounded-xl font-bold">
+                            Passo a Passo
+                        </button>
+                    </div>
+
+                    <div id="step-panel" class="hidden p-2.5 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+                        <div class="flex items-center justify-between">
+                            <div id="step-string-display" class="text-xs font-bold code-font tracking-widest"></div>
+                            <div id="step-status" class="text-[11px] font-mono text-cyan-600 dark:text-cyan-400 font-bold"></div>
+                        </div>
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="prevStep()" class="bg-slate-200 dark:bg-slate-800 text-xs px-2 py-0.5 rounded">⏪ Voltar</button>
+                            <button onclick="togglePlayPause()" id="play-pause-btn" class="bg-cyan-500 text-slate-950 font-bold text-xs px-3 py-0.5 rounded">▶ Play</button>
+                            <button onclick="nextStep()" class="bg-slate-200 dark:bg-slate-800 text-xs px-2 py-0.5 rounded">⏩ Avançar</button>
+                            <button onclick="stopSimulation()" class="bg-rose-500/20 text-rose-600 text-xs px-2 py-0.5 rounded">⏹ Parar</button>
+                        </div>
+                    </div>
+                    <div id="simulation-feedback" class="hidden p-2 rounded-lg text-center font-bold text-xs"></div>
+                </div>
+
+                <!-- Sub-painel 3: Diagnóstico -->
+                <div id="left-panel-diag" class="hidden flex flex-col gap-2">
+                    <div id="validator-status" class="flex flex-col gap-1.5 max-h-[140px] overflow-y-auto"></div>
+                    <button onclick="removeUnreachableStates()" id="btn-remove-unreachable" class="hidden bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs py-1.5 rounded-xl font-bold">
+                        🧹 Remover Estados Inalcançáveis
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== COLUNA DIREITA: MINIMIZAÇÃO, TABELA TRIANGULAR & PARTIÇÕES (6 Colunas) ==================== -->
+        <section class="lg:col-span-6 flex flex-col gap-3">
+            
+            <!-- Painel Principal de Minimização com Abas Integradas -->
+            <div class="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-900 rounded-2xl flex flex-col overflow-hidden shadow-sm dark:shadow-none transition-colors duration-200 flex-grow">
+                
+                <!-- Abas da Minimização -->
+                <div class="p-2 bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-900 flex items-center justify-between gap-1 flex-wrap shrink-0">
+                    <div class="flex gap-1 flex-wrap">
+                        <button onclick="switchMinTab('matrix')" id="min-tab-matrix" class="px-3 py-1.5 text-xs font-bold rounded-xl transition bg-cyan-500 text-slate-950 shadow-sm flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span>Tabela Triangular (Q × Q)</span>
+                        </button>
+                        <button onclick="switchMinTab('partitions')" id="min-tab-partitions" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/60 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            <span>Partições & 5-Tupla</span>
+                        </button>
+                        <button onclick="switchMinTab('compare')" id="min-tab-compare" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/60 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                            </svg>
+                            <span>Comparação (M vs M')</span>
+                        </button>
+                    </div>
+
+                    <button onclick="finishTableMinimization()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition shadow-sm">
+                        Minimizar Tudo
+                    </button>
+                </div>
+
+                <!-- ================= CONTEÚDO 1: TABELA TRIANGULAR DE DISTINGUIBILIDADE ================= -->
+                <div id="min-panel-matrix" class="p-4 flex flex-col gap-3 flex-grow">
+                    
+                    <!-- Barra de Controles do Passo a Passo -->
+                    <div class="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="resetTableMinimization()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs px-2.5 py-1.5 rounded-xl font-bold" title="Reiniciar">
+                                🔄
+                            </button>
+                            <button onclick="prevTableStep()" id="btn-table-prev" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs px-2.5 py-1.5 rounded-xl font-bold disabled:opacity-40" disabled>
+                                ⏪ Voltar
+                            </button>
+                            <button onclick="toggleTablePlay()" id="btn-table-play" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-extrabold px-3 py-1.5 rounded-xl transition shadow-sm shadow-cyan-500/10">
+                                ▶ Executar Passo a Passo
+                            </button>
+                            <button onclick="nextTableStep()" id="btn-table-next" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs px-2.5 py-1.5 rounded-xl font-bold">
+                                ⏩ Avançar
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <span id="table-step-indicator" class="text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                                Passo 0 de 0
+                            </span>
+                            <label class="flex items-center gap-1 cursor-pointer text-[11px] text-slate-600 dark:text-slate-300 font-semibold">
+                                <input type="checkbox" id="chk-challenge-mode" onchange="toggleChallengeMode()" class="rounded accent-cyan-500">
+                                Modo Exercício
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Container da Matriz Triangular (Scrollável) -->
+                    <div class="overflow-x-auto p-2 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-100 dark:border-slate-800/80 min-h-[220px] max-h-[280px] flex items-center justify-center" id="dist-matrix-container">
+                        <!-- Gerado Dinamicamente -->
+                    </div>
+
+                    <!-- Explicação Didática da Etapa Atual -->
+                    <div id="table-step-explanation" class="p-2.5 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800/80 text-xs text-slate-700 dark:text-slate-300 min-h-[60px] flex items-center">
+                        Carregue um exemplo ou crie seu AFD e clique em <strong>"▶ Executar Passo a Passo"</strong> para ver a tabela sendo preenchida enquanto os estados são iluminados no grafo!
+                    </div>
+
+                    <!-- Painel do Modo Exercício (Oculto por padrão) -->
+                    <div id="challenge-controls" class="hidden flex flex-col gap-2 pt-1 border-t border-slate-150 dark:border-slate-800">
+                        <button onclick="checkStudentChallenge()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-2 rounded-xl transition shadow-md shadow-emerald-600/20">
+                            ✔ Verificar Minha Tabela (Exercício do Aluno)
+                        </button>
+                        <div id="challenge-feedback" class="text-xs font-bold text-center p-2 rounded-lg hidden"></div>
+                    </div>
+
+                    <!-- Classes de Equivalência Resultantes e Ação de Aplicação -->
+                    <div class="flex flex-col gap-2 pt-2 border-t border-slate-150 dark:border-slate-800">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase code-font">Classes de Equivalência [q]:</span>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="text-slate-400">Original: <strong id="eq-original-count" class="font-mono text-slate-600 dark:text-slate-300">0</strong></span>
+                                <span>→</span>
+                                <span class="text-cyan-600 dark:text-cyan-400 font-bold">Mínimo: <strong id="eq-minimized-count" class="font-mono">0</strong></span>
+                            </div>
+                        </div>
+
+                        <div id="equivalence-classes-container" class="flex flex-wrap gap-1.5 min-h-[34px] items-center p-1.5 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <span class="text-[11px] text-slate-400">Classes serão calculadas ao avançar no algoritmo.</span>
+                        </div>
+
+                        <div class="flex gap-2 pt-1">
+                            <button onclick="applyMinimizedDFA()" class="flex-grow bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-extrabold text-xs py-2 rounded-xl transition shadow-md shadow-cyan-500/10 flex items-center justify-center gap-1.5">
+                                <span>✨ Substituir Grafo pelo AFD Minimizado</span>
+                            </button>
+                            <button onclick="exportTableToLaTeX()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 text-slate-700 dark:text-slate-200 text-xs px-2.5 py-2 rounded-xl font-bold" title="Copiar Tabela em LaTeX">
+                                LaTeX
+                            </button>
+                            <button onclick="exportTableToMarkdown()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 text-slate-700 dark:text-slate-200 text-xs px-2.5 py-2 rounded-xl font-bold" title="Copiar Tabela em Markdown">
+                                MD
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= CONTEÚDO 2: REFINAMENTO DE PARTIÇÕES ================= -->
+                <div id="min-panel-partitions" class="hidden p-4 flex flex-col gap-3 flex-grow overflow-y-auto max-h-[520px]">
+                    <div class="flex flex-col gap-1">
+                        <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase code-font">Evolução Sucessiva de Partições (Hopcroft / Moore)</h3>
+                        <p class="text-[11px] text-slate-400">Divisão dos blocos a partir de <span class="font-mono font-bold">P₀ = { F, Q \ F }</span>.</p>
+                    </div>
+
+                    <div id="partition-steps-list" class="flex flex-col gap-2"></div>
+
+                    <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+                        <h4 class="text-xs font-bold text-cyan-600 dark:text-cyan-400 code-font uppercase">Definição Formal do AFD Mínimo M' = (Q', Σ, δ', q₀', F')</h4>
+                        <div id="formal-5tuple-display" class="p-3 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-100 dark:border-slate-800 text-xs font-mono space-y-1 text-slate-700 dark:text-slate-300"></div>
+
+                        <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 code-font uppercase mt-1">Tabela de Transições δ'</h4>
+                        <div class="overflow-x-auto max-h-[160px] overflow-y-auto">
+                            <table class="w-full text-left text-xs border-collapse" id="min-trans-table"></table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= CONTEÚDO 3: COMPARAÇÃO ORIGINAL VS MINIMIZADO ================= -->
+                <div id="min-panel-compare" class="hidden p-4 flex flex-col gap-3 flex-grow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase code-font">Comparador de Equivalência Formal</h3>
+                            <p class="text-[11px] text-slate-400">Visualização de M e M' com testes cruzados de palavras.</p>
+                        </div>
+                        <button onclick="runSideBySideEquivalenceTest()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl transition shadow-sm">
+                            🧪 Testar 18 Cadeias
+                        </button>
+                    </div>
+
+                    <!-- Mini Canvases de Comparação -->
+                    <div class="grid grid-cols-2 gap-2 h-[180px]">
+                        <div class="bg-slate-100/60 dark:bg-slate-950/80 rounded-xl border border-slate-200 dark:border-slate-800 relative overflow-hidden flex flex-col">
+                            <span class="absolute top-1 left-2 text-[9px] font-mono font-bold text-slate-400 z-10">M (Original: <span id="compare-original-badge">0</span>)</span>
+                            <canvas id="canvas-compare-orig" class="w-full h-full"></canvas>
+                        </div>
+                        <div class="bg-slate-100/60 dark:bg-slate-950/80 rounded-xl border border-slate-200 dark:border-slate-800 relative overflow-hidden flex flex-col">
+                            <span class="absolute top-1 left-2 text-[9px] font-mono font-bold text-cyan-500 z-10">M' (Minimizado: <span id="compare-min-badge">0</span>)</span>
+                            <canvas id="canvas-compare-min" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Resultados de Simulação Cruzada -->
+                    <div class="overflow-x-auto max-h-[160px] overflow-y-auto border border-slate-150 dark:border-slate-800 rounded-xl">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-slate-900/50 text-slate-400 border-b border-slate-150 dark:border-slate-800">
+                                    <th class="py-1 px-3">Cadeia (w)</th>
+                                    <th class="py-1 px-3">M Original</th>
+                                    <th class="py-1 px-3">M' Minimizado</th>
+                                    <th class="py-1 px-3 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cross-test-results-body" class="divide-y divide-slate-100 dark:divide-slate-900/40">
+                                <tr>
+                                    <td colspan="4" class="py-3 text-center text-slate-400 text-[11px]">Clique em "Testar 18 Cadeias" para validar equivalência.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Alerta Customizado -->
+    <div id="custom-alert" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl max-w-sm w-full text-center relative shadow-2xl">
+            <div class="w-10 h-10 rounded-full mx-auto flex items-center justify-center mb-3 bg-cyan-500/10 border border-cyan-500/20">
+                <svg class="w-5 h-5 text-cyan-500 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h3 id="alert-title" class="text-base font-bold text-slate-800 dark:text-slate-100 mb-1.5">Mensagem do Sistema</h3>
+            <p id="alert-message" class="text-slate-500 dark:text-slate-400 text-xs mb-5"></p>
+            <button onclick="closeAlert()" class="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2 rounded-xl transition text-xs">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de Prompt Customizado -->
+    <div id="prompt-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl max-w-sm w-full text-center relative shadow-2xl">
+            <h3 id="prompt-modal-title" class="text-sm font-bold text-slate-800 dark:text-slate-100 mb-1 code-font">Criar Estado</h3>
+            <p id="prompt-modal-desc" class="text-[11px] text-slate-500 dark:text-slate-400 mb-3"></p>
+            <input type="text" id="prompt-modal-input" class="w-full bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs outline-none text-slate-800 dark:text-slate-100 font-bold mb-4 code-font" placeholder="Ex: q0">
+            <div class="flex gap-2">
+                <button onclick="closePromptModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2 rounded-xl transition text-xs">Cancelar</button>
+                <button id="prompt-modal-confirm-btn" onclick="confirmPromptModal()" class="w-1/2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-2 rounded-xl transition text-xs shadow-sm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu de Contexto Customizado para o Canvas -->
+    <div id="canvas-context-menu" class="hidden fixed bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 py-1.5 min-w-[150px] text-xs">
+        <button onclick="contextSetInitial()" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-750 dark:text-slate-200 flex items-center gap-1.5">⭐ Definir como Inicial</button>
+        <button onclick="contextToggleAcceptance()" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-750 dark:text-slate-200 flex items-center gap-1.5">✔ Alternar Aceitação</button>
+        <button onclick="contextRenameState()" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-750 dark:text-slate-200 flex items-center gap-1.5">✏ Renomear Estado</button>
+        <div class="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
+        <button onclick="contextDeleteState()" class="w-full text-left px-3 py-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-455 flex items-center gap-1.5 font-medium">❌ Excluir Estado</button>
+    </div>
+
+    <!-- Modal de Configuração de Transição Visual -->
+    <div id="transition-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl max-w-sm w-full text-center relative shadow-2xl">
+            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 mb-1 code-font">Configurar Transição</h3>
+            <p id="transition-modal-desc" class="text-[11px] text-slate-500 dark:text-slate-400 mb-3"></p>
+            <div id="transition-symbols-container" class="flex flex-wrap justify-center gap-1.5 mb-4"></div>
+            <div class="flex gap-2">
+                <button onclick="closeTransitionModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2 rounded-xl transition text-xs">Cancelar</button>
+                <button onclick="confirmTransitionConfig()" class="w-1/2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-2 rounded-xl transition text-xs shadow-sm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Exportação LaTeX / TikZ / Markdown -->
+    <div id="latex-export-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl max-w-xl w-full relative shadow-2xl flex flex-col gap-3">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <h3 id="export-modal-title" class="text-sm font-bold text-slate-850 dark:text-slate-100 code-font">Código Exportado</h3>
+                <button onclick="closeLatexModal()" class="text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 text-lg transition font-extrabold">&times;</button>
+            </div>
+            <p id="export-modal-desc" class="text-[11px] text-slate-500 dark:text-slate-400">Copie o código gerado para o seu trabalho ou documento.</p>
+            <textarea id="latex-code-textarea" readonly rows="10" class="w-full bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2 text-xs outline-none text-slate-800 dark:text-slate-100 font-mono resize-none"></textarea>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeLatexModal()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-1.5 px-4 rounded-xl transition text-xs">Fechar</button>
+                <button onclick="copyLatexCode()" id="copy-latex-btn" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-1.5 px-4 rounded-xl transition text-xs shadow-sm">Copiar Código</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rodapé -->
+    <footer class="border-t border-slate-200 dark:border-slate-900 bg-white dark:bg-slate-950/80 p-3 text-center text-[11px] text-slate-400 dark:text-slate-500 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2">
+            <p>© <span id="year-display"></span> — Modelador e Minimizador de AFD para Teoria da Computação.</p>
+            <div><span>Professor Msc. Luciano R. Nascimento</span></div>
+        </div>
+    </footer>
+
+    <!-- Aplicação e Lógica do Modelador e Minimizador -->
+    <script>
+        document.getElementById('year-display').textContent = new Date().getFullYear();
+
+        // ----------------- CONTROLE DE TEMAS (CLARO E ESCURO) -----------------
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const hasDarkClass = document.documentElement.classList.contains('dark');
+            if (savedTheme === 'light' || (!savedTheme && !hasDarkClass)) {
+                setLightTheme();
+            } else {
+                setDarkTheme();
+            }
+        }
+
+        function setLightTheme() {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+            document.getElementById('theme-sun').classList.add('hidden');
+            document.getElementById('theme-moon').classList.remove('hidden');
+            redrawGraph();
+            redrawCompareCanvases();
+        }
+
+        function setDarkTheme() {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+            document.getElementById('theme-moon').classList.add('hidden');
+            document.getElementById('theme-sun').classList.remove('hidden');
+            redrawGraph();
+            redrawCompareCanvases();
+        }
+
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                setLightTheme();
+            } else {
+                setDarkTheme();
+            }
+        }
+
+        function isDarkTheme() {
+            return document.documentElement.classList.contains('dark');
+        }
+
+        // ----------------- CONTROLE DAS SUB-ABAS DA COLUNA ESQUERDA -----------------
+        function switchLeftSubTab(tab) {
+            const tabs = ['delta', 'simulator', 'diag'];
+            tabs.forEach(t => {
+                const p = document.getElementById(`left-panel-${t}`);
+                const b = document.getElementById(`left-subtab-${t}`);
+                if (t === tab) {
+                    if (p) p.classList.remove('hidden');
+                    if (b) b.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 transition";
+                } else {
+                    if (p) p.classList.add('hidden');
+                    if (b) b.className = "px-2.5 py-1 text-xs font-bold rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition";
+                }
+            });
+        }
+
+        // ----------------- CONTROLE DAS ABAS DA MINIMIZAÇÃO (COLUNA DIREITA) -----------------
+        let currentMinTab = 'matrix';
+        function switchMinTab(tab) {
+            currentMinTab = tab;
+            const tabs = ['matrix', 'partitions', 'compare'];
+            tabs.forEach(t => {
+                const p = document.getElementById(`min-panel-${t}`);
+                const b = document.getElementById(`min-tab-${t}`);
+                if (t === tab) {
+                    if (p) p.classList.remove('hidden');
+                    if (b) {
+                        b.classList.remove('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-200/50', 'dark:hover:bg-slate-800/60');
+                        b.classList.add('bg-cyan-500', 'text-slate-950', 'shadow-sm');
+                    }
+                } else {
+                    if (p) p.classList.add('hidden');
+                    if (b) {
+                        b.classList.remove('bg-cyan-500', 'text-slate-950', 'shadow-sm');
+                        b.classList.add('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-200/50', 'dark:hover:bg-slate-800/60');
+                    }
+                }
+            });
+
+            if (tab === 'partitions') {
+                renderPartitionsContent();
+            } else if (tab === 'compare') {
+                renderCompareContent();
+            }
+        }
+
+        // ----------------- ESTADO GLOBAL DO AUTÔMATO -----------------
+        let alphabet = ['0', '1'];
+        let states = []; 
+        let initialStateId = "";
+        let acceptingStateIds = [];
+        let transitions = {}; 
+        let selectedStateIds = [];
+        let dragStartPos = null;
+        let initialSelectedPositions = [];
+
+        let historyStack = [];
+        let redoStack = [];
+
+        function saveHistory() {
+            const currentSnapshot = JSON.stringify({
+                alphabet: [...alphabet],
+                states: JSON.parse(JSON.stringify(states)),
+                initialStateId,
+                acceptingStateIds: [...acceptingStateIds],
+                transitions: JSON.parse(JSON.stringify(transitions))
+            });
+            if (historyStack.length > 0 && historyStack[historyStack.length - 1] === currentSnapshot) return;
+            historyStack.push(currentSnapshot);
+            if (historyStack.length > 30) historyStack.shift();
+            redoStack = [];
+            updateUndoRedoButtons();
+        }
+
+        function restoreFromSnapshot(snapshotStr) {
+            const data = JSON.parse(snapshotStr);
+            alphabet = [...data.alphabet];
+            document.getElementById('alphabet-input').value = alphabet.join(', ');
+            states = JSON.parse(JSON.stringify(data.states));
+            initialStateId = data.initialStateId;
+            acceptingStateIds = [...data.acceptingStateIds];
+            transitions = JSON.parse(JSON.stringify(data.transitions));
+            selectedStateIds = [];
+            buildStateTable();
+            redrawGraph();
+            recalculateMinimization();
+            saveToLocalStorage();
+        }
+
+        function undo() {
+            if (historyStack.length <= 1) return;
+            const current = historyStack.pop();
+            redoStack.push(current);
+            const prev = historyStack[historyStack.length - 1];
+            restoreFromSnapshot(prev);
+            updateUndoRedoButtons();
+        }
+
+        function redo() {
+            if (redoStack.length === 0) return;
+            const next = redoStack.pop();
+            historyStack.push(next);
+            restoreFromSnapshot(next);
+            updateUndoRedoButtons();
+        }
+
+        function updateUndoRedoButtons() {
+            const btnUndo = document.getElementById('btn-undo');
+            const btnRedo = document.getElementById('btn-redo');
+            if (btnUndo) btnUndo.disabled = historyStack.length <= 1;
+            if (btnRedo) btnRedo.disabled = redoStack.length === 0;
+        }
+
+        // ----------------- ESTADO DO ALGORITMO DE MINIMIZAÇÃO -----------------
+        let minAlgorithmState = {
+            reachableStates: [],
+            unreachableStates: [],
+            pairs: [],
+            stepsHistory: [],
+            currentStepIndex: 0,
+            isPlaying: false,
+            playTimer: null,
+            isChallengeMode: false,
+            userMarks: {},
+            partitionsHistory: [],
+            equivalenceClasses: [],
+            minimizedAutomaton: null,
+            activeHighlightPair: null // [p, q] para iluminar no canvas
+        };
+
+        // ----------------- CANVAS E RENDERIZADOR -----------------
+        const canvas = document.getElementById('automaton-canvas');
+        const ctx = canvas.getContext('2d');
+        const nodeRadius = 24;
+
+        let isDrawingTransition = false;
+        let transitionStartNode = null;
+        let mouseCurrentPos = { x: 0, y: 0 };
+        let isDraggingNode = false;
+        let isBoxSelecting = false;
+        let boxSelectStart = { x: 0, y: 0 };
+        let boxSelectCurrent = { x: 0, y: 0 };
+        let drawModeActive = false;
+
+        function toggleDrawMode() {
+            drawModeActive = !drawModeActive;
+            const btn = document.getElementById('btn-draw-mode');
+            const ind = document.getElementById('draw-mode-indicator');
+            if (drawModeActive) {
+                btn.classList.add('bg-cyan-500/20', 'border-cyan-500/40', 'text-cyan-600', 'dark:text-cyan-400');
+                ind.classList.replace('bg-slate-400', 'bg-cyan-500');
+                ind.classList.replace('dark:bg-slate-500', 'bg-cyan-500');
+                btn.querySelector('.btn-text').textContent = "Ligar";
+            } else {
+                btn.classList.remove('bg-cyan-500/20', 'border-cyan-500/40', 'text-cyan-600', 'dark:text-cyan-400');
+                ind.classList.replace('bg-cyan-500', 'bg-slate-400');
+                btn.querySelector('.btn-text').textContent = "Mover";
+            }
+        }
+
+        function getNodeFontSize(c, text, baseSize = 13, maxRadius = 24) {
+            let size = baseSize;
+            c.font = `bold ${size}px 'Fira Code', monospace`;
+            let metrics = c.measureText(text);
+            const targetWidth = maxRadius * 1.5;
+            while (metrics.width > targetWidth && size > 7) {
+                size -= 1;
+                c.font = `bold ${size}px 'Fira Code', monospace`;
+                metrics = c.measureText(text);
+            }
+            return size;
+        }
+
+        function setupCanvasSize() {
+            if (!canvas.parentElement) return;
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = `${rect.width}` + 'px';
+            canvas.style.height = `${rect.height}` + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function showAlert(title, msg) {
+            document.getElementById('alert-title').textContent = title;
+            document.getElementById('alert-message').textContent = msg;
+            document.getElementById('custom-alert').classList.remove('hidden');
+        }
+
+        function closeAlert() {
+            document.getElementById('custom-alert').classList.add('hidden');
+        }
+
+        function saveToLocalStorage() {
+            const data = { alphabet, states, initialStateId, acceptingStateIds, transitions };
+            localStorage.setItem('modelador_min_afd_data', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('modelador_min_afd_data');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    alphabet = data.alphabet || ['0', '1'];
+                    states = data.states || [];
+                    initialStateId = data.initialStateId || "";
+                    acceptingStateIds = data.acceptingStateIds || [];
+                    transitions = data.transitions || {};
+                    document.getElementById('alphabet-input').value = alphabet.join(', ');
+                    buildStateTable();
+                    saveHistory();
+                    recalculateMinimization();
+                    return true;
+                } catch (e) {
+                    console.error("Erro ao carregar dados salvos:", e);
+                }
+            }
+            return false;
+        }
+
+        function exportToJSON() {
+            const data = {
+                tipo: 'AFD_MINIMIZACAO',
+                alfabeto: alphabet,
+                estados: states,
+                estadoInicial: initialStateId,
+                estadosFinais: acceptingStateIds,
+                transicoes: transitions,
+                dataExportacao: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `afd-minimizacao-${new Date().getTime()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importFromJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data.estados || !Array.isArray(data.estados)) {
+                        throw new Error("Formato inválido: propriedade 'estados' ausente.");
+                    }
+                    saveHistory();
+                    alphabet = data.alfabeto || ['0', '1'];
+                    document.getElementById('alphabet-input').value = alphabet.join(', ');
+                    states = data.estados;
+                    initialStateId = data.estadoInicial || (states[0] ? states[0].id : "");
+                    acceptingStateIds = data.estadosFinais || [];
+                    transitions = data.transicoes || {};
+                    buildStateTable();
+                    centerGraphCoordinates();
+                    redrawGraph();
+                    recalculateMinimization();
+                    saveToLocalStorage();
+                    showAlert("Sucesso", "Autômato importado com sucesso!");
+                } catch (err) {
+                    showAlert("Erro", "Falha ao importar JSON: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = "";
+        }
+
+        // ----------------- CRUD DE ESTADOS E TRANSIÇÕES -----------------
+        let promptModalCallback = null;
+
+        function openPromptModal(title, desc, defaultValue, callback) {
+            document.getElementById('prompt-modal-title').textContent = title;
+            document.getElementById('prompt-modal-desc').textContent = desc;
+            const input = document.getElementById('prompt-modal-input');
+            input.value = defaultValue;
+            promptModalCallback = callback;
+            document.getElementById('prompt-modal').classList.remove('hidden');
+            setTimeout(() => { input.focus(); input.select(); }, 100);
+        }
+
+        function closePromptModal() {
+            document.getElementById('prompt-modal').classList.add('hidden');
+            promptModalCallback = null;
+        }
+
+        function confirmPromptModal() {
+            const input = document.getElementById('prompt-modal-input');
+            const val = input.value.trim();
+            if (promptModalCallback) promptModalCallback(val);
+            closePromptModal();
+        }
+
+        function handleAddStateClick() {
+            openPromptModal("Criar Novo Estado", "Identificador para o estado:", getNextStateId(), (val) => {
+                if (!val) return;
+                if (states.some(s => s.id === val)) {
+                    showAlert("Identificador Existente", `O estado "${val}" já existe.`);
+                    return;
+                }
+                addNewState(null, null, val);
+            });
+        }
+
+        function getNextStateId() {
+            let idx = 0;
+            while (states.some(s => s.id === `q${idx}`)) idx++;
+            return `q${idx}`;
+        }
+
+        function addNewState(x = null, y = null, customId = null) {
+            saveHistory();
+            const id = customId || getNextStateId();
+            const posX = x !== null ? x : 100 + (states.length % 4) * 90;
+            const posY = y !== null ? y : 100 + Math.floor(states.length / 4) * 90;
+            
+            states.push({ id, x: posX, y: posY });
+            if (!initialStateId) initialStateId = id;
+            if (!transitions[id]) transitions[id] = {};
+
+            buildStateTable();
+            redrawGraph();
+            recalculateMinimization();
+            saveToLocalStorage();
+        }
+
+        function removeState(id) {
+            saveHistory();
+            states = states.filter(s => s.id !== id);
+            acceptingStateIds = acceptingStateIds.filter(fid => fid !== id);
+            if (initialStateId === id) {
+                initialStateId = states[0] ? states[0].id : "";
+            }
+            delete transitions[id];
+            for (let from in transitions) {
+                for (let sym in transitions[from]) {
+                    if (transitions[from][sym] === id) {
+                        delete transitions[from][sym];
+                    }
+                }
+            }
+            selectedStateIds = selectedStateIds.filter(sid => sid !== id);
+            buildStateTable();
+            redrawGraph();
+            recalculateMinimization();
+            saveToLocalStorage();
+        }
+
+        function toggleAcceptance(id) {
+            saveHistory();
+            if (acceptingStateIds.includes(id)) {
+                acceptingStateIds = acceptingStateIds.filter(fid => fid !== id);
+            } else {
+                acceptingStateIds.push(id);
+            }
+            buildStateTable();
+            redrawGraph();
+            recalculateMinimization();
+            saveToLocalStorage();
+        }
+
+        function setInitialState(id) {
+            saveHistory();
+            initialStateId = id;
+            buildStateTable();
+            redrawGraph();
+            recalculateMinimization();
+            saveToLocalStorage();
+        }
+
+        function changeTransition(fromState, symbol, destState) {
+            saveHistory();
+            if (!transitions[fromState]) transitions[fromState] = {};
+            if (destState === "") {
+                delete transitions[fromState][symbol];
+            } else {
+                transitions[fromState][symbol] = destState;
+            }
+            buildStateTable();
+            redrawGraph();
+            recalculateMinimization();
+            saveToLocalStorage();
+        }
+
+        function clearAutomaton() {
+            if (states.length === 0) return;
+            saveHistory();
+            states = [];
+            initialStateId = "";
+            acceptingStateIds = [];
+            transitions = {};
+            selectedStateIds = [];
+            buildStateTable();
+            redrawGraph();
+            recalculateMinimization();
+            saveToLocalStorage();
+        }
+
+        function updateAlphabet() {
+            const raw = document.getElementById('alphabet-input').value;
+            const parts = raw.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            const clean = Array.from(new Set(parts));
+            if (clean.length === 0) {
+                showAlert("Alfabeto Inválido", "O alfabeto precisa ter ao menos um símbolo.");
+                document.getElementById('alphabet-input').value = alphabet.join(', ');
+                return;
+            }
+            saveHistory();
+            alphabet = clean;
+            for (let from in transitions) {
+                for (let sym in transitions[from]) {
+                    if (!alphabet.includes(sym)) {
+                        delete transitions[from][sym];
+                    }
+                }
+            }
+            buildStateTable();
+            redrawGraph();
+            recalculateMinimization();
+            saveToLocalStorage();
+        }
+
+        function buildStateTable() {
+            const tbody = document.getElementById('state-table-body');
+            tbody.innerHTML = '';
+            document.getElementById('state-count').textContent = states.length;
+
+            states.forEach(node => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/40 transition";
+
+                const tdName = document.createElement('td');
+                tdName.className = "py-1.5 font-mono font-bold text-slate-700 dark:text-slate-200";
+                tdName.textContent = node.id;
+                tr.appendChild(tdName);
+
+                const tdInit = document.createElement('td');
+                tdInit.className = "py-1.5 text-center";
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'initial-state-radio';
+                radio.checked = (node.id === initialStateId);
+                radio.className = "accent-cyan-500 cursor-pointer";
+                radio.onchange = () => setInitialState(node.id);
+                tdInit.appendChild(radio);
+                tr.appendChild(tdInit);
+
+                const tdFinal = document.createElement('td');
+                tdFinal.className = "py-1.5 text-center";
+                const chk = document.createElement('input');
+                chk.type = 'checkbox';
+                chk.checked = acceptingStateIds.includes(node.id);
+                chk.className = "accent-cyan-500 rounded cursor-pointer";
+                chk.onchange = () => toggleAcceptance(node.id);
+                tdFinal.appendChild(chk);
+                tr.appendChild(tdFinal);
+
+                const tdTrans = document.createElement('td');
+                tdTrans.className = "py-1.5 pl-2";
+                const transBox = document.createElement('div');
+                transBox.className = "flex flex-wrap gap-1 items-center";
+
+                alphabet.forEach(sym => {
+                    const wrap = document.createElement('div');
+                    wrap.className = "flex items-center gap-1 bg-slate-100 dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800 text-[10px]";
+                    
+                    const lbl = document.createElement('span');
+                    lbl.className = "font-mono font-bold text-cyan-600 dark:text-cyan-400";
+                    lbl.textContent = sym + '→';
+                    wrap.appendChild(lbl);
+
+                    const select = document.createElement('select');
+                    select.className = "bg-transparent font-mono font-semibold text-slate-800 dark:text-slate-100 outline-none cursor-pointer text-[10px]";
+                    
+                    const optEmpty = document.createElement('option');
+                    optEmpty.value = "";
+                    optEmpty.textContent = "—";
+                    select.appendChild(optEmpty);
+
+                    states.forEach(target => {
+                        const opt = document.createElement('option');
+                        opt.value = target.id;
+                        opt.textContent = target.id;
+                        select.appendChild(opt);
+                    });
+
+                    select.value = transitions[node.id]?.[sym] || "";
+                    select.onchange = (e) => changeTransition(node.id, sym, e.target.value);
+                    wrap.appendChild(select);
+                    transBox.appendChild(wrap);
+                });
+                tdTrans.appendChild(transBox);
+                tr.appendChild(tdTrans);
+
+                const tdActions = document.createElement('td');
+                tdActions.className = "py-1.5 text-center";
+                const delBtn = document.createElement('button');
+                delBtn.className = "text-rose-500 hover:text-rose-600 font-bold px-1";
+                delBtn.innerHTML = "&times;";
+                delBtn.onclick = () => removeState(node.id);
+                tdActions.appendChild(delBtn);
+                tr.appendChild(tdActions);
+
+                tbody.appendChild(tr);
+            });
+
+            runDiagnostics();
+        }
+
+        function getReachableStatesList() {
+            const reachable = new Set();
+            if (!initialStateId || !states.some(s => s.id === initialStateId)) return reachable;
+            const queue = [initialStateId];
+            reachable.add(initialStateId);
+
+            while (queue.length > 0) {
+                const curr = queue.shift();
+                const trans = transitions[curr] || {};
+                alphabet.forEach(sym => {
+                    const dest = trans[sym];
+                    if (dest && states.some(s => s.id === dest) && !reachable.has(dest)) {
+                        reachable.add(dest);
+                        queue.push(dest);
+                    }
+                });
+            }
+            return reachable;
+        }
+
+        function runDiagnostics() {
+            const container = document.getElementById('validator-status');
+            const btnRemoveUnreachable = document.getElementById('btn-remove-unreachable');
+            container.innerHTML = '';
+
+            const errors = [];
+            const warnings = [];
+
+            if (states.length === 0) {
+                container.innerHTML = '<div class="text-slate-400 text-xs italic">Nenhum estado cadastrado.</div>';
+                btnRemoveUnreachable?.classList.add('hidden');
+                return;
+            }
+
+            if (!initialStateId || !states.some(s => s.id === initialStateId)) {
+                errors.push("Estado inicial não definido.");
+            }
+
+            if (acceptingStateIds.length === 0) {
+                warnings.push("Nenhum estado final definido.");
+            }
+
+            const reachable = getReachableStatesList();
+            const unreachables = states.filter(s => !reachable.has(s.id));
+            if (unreachables.length > 0) {
+                warnings.push(`${unreachables.length} inalcançável(is): { ${unreachables.map(u => u.id).join(', ')} }`);
+                btnRemoveUnreachable?.classList.remove('hidden');
+            } else {
+                btnRemoveUnreachable?.classList.add('hidden');
+            }
+
+            if (errors.length === 0 && warnings.length === 0) {
+                container.innerHTML = `<div class="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1.5 rounded-lg text-xs font-bold">✓ AFD Conexo e Pronto!</div>`;
+            } else {
+                errors.forEach(e => {
+                    const el = document.createElement('div');
+                    el.className = "text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded text-xs";
+                    el.textContent = "✕ " + e;
+                    container.appendChild(el);
+                });
+                warnings.forEach(w => {
+                    const el = document.createElement('div');
+                    el.className = "text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded text-xs";
+                    el.textContent = "⚠ " + w;
+                    container.appendChild(el);
+                });
+            }
+        }
+
+        function removeUnreachableStates() {
+            const reachable = getReachableStatesList();
+            const unreachables = states.filter(s => !reachable.has(s.id));
+            if (unreachables.length === 0) return;
+
+            saveHistory();
+            states = states.filter(s => reachable.has(s.id));
+            acceptingStateIds = acceptingStateIds.filter(id => reachable.has(id));
+            for (let from in transitions) {
+                if (!reachable.has(from)) {
+                    delete transitions[from];
+                } else {
+                    for (let sym in transitions[from]) {
+                        if (!reachable.has(transitions[from][sym])) {
+                            delete transitions[from][sym];
+                        }
+                    }
+                }
+            }
+            buildStateTable();
+            redrawGraph();
+            recalculateMinimization();
+            saveToLocalStorage();
+            showAlert("Limpeza Concluída", `${unreachables.length} estado(s) inalcançáveis foram removidos.`);
+        }
+
+        // ----------------- RENDERIZAÇÃO DO GRAFO (CANVAS) COM HIGHLIGHT DE PARES -----------------
+        function redrawGraph(simActiveState = null) {
+            setupCanvasSize();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid(ctx);
+            drawTransitions(ctx, simActiveState);
+            drawStates(ctx, simActiveState);
+            if (isBoxSelecting) drawSelectionBox(ctx);
+        }
+
+        function drawGrid(c) {
+            const isDark = isDarkTheme();
+            c.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)';
+            c.lineWidth = 1;
+            const step = 20;
+            c.beginPath();
+            for (let x = 0; x < canvas.width; x += step) { c.moveTo(x, 0); c.lineTo(x, canvas.height); }
+            for (let y = 0; y < canvas.height; y += step) { c.moveTo(0, y); c.lineTo(canvas.width, y); }
+            c.stroke();
+        }
+
+        function drawTransitions(c, simActiveState) {
+            const edgeGroups = {};
+            states.forEach(fromNode => {
+                const trans = transitions[fromNode.id] || {};
+                alphabet.forEach(sym => {
+                    const destId = trans[sym];
+                    if (destId) {
+                        const toNode = states.find(s => s.id === destId);
+                        if (toNode) {
+                            const key = `${fromNode.id}->${toNode.id}`;
+                            if (!edgeGroups[key]) edgeGroups[key] = [];
+                            edgeGroups[key].push(sym);
+                        }
+                    }
+                });
+            });
+
+            for (let key in edgeGroups) {
+                const [fromId, toId] = key.split("->");
+                const fromNode = states.find(s => s.id === fromId);
+                const toNode = states.find(s => s.id === toId);
+                const label = edgeGroups[key].join(", ");
+                const isActive = (simActiveState && simActiveState === fromId);
+
+                if (fromId === toId) {
+                    drawSelfLoop(c, fromNode, label, isActive);
+                } else {
+                    const reverseKey = `${toId}->${fromId}`;
+                    const hasReverse = !!edgeGroups[reverseKey];
+                    drawEdge(c, fromNode, toNode, label, hasReverse, isActive);
+                }
+            }
+
+            if (isDrawingTransition && transitionStartNode) {
+                c.strokeStyle = '#06b6d4';
+                c.lineWidth = 2;
+                c.setLineDash([4, 4]);
+                c.beginPath();
+                c.moveTo(transitionStartNode.x, transitionStartNode.y);
+                c.lineTo(mouseCurrentPos.x, mouseCurrentPos.y);
+                c.stroke();
+                c.setLineDash([]);
+            }
+        }
+
+        function drawSelfLoop(c, node, label, isActive) {
+            const isDark = isDarkTheme();
+            const r = nodeRadius;
+            const loopR = 16;
+            const cx = node.x;
+            const cy = node.y - r - loopR + 5;
+
+            c.strokeStyle = isActive ? '#06b6d4' : (isDark ? '#94a3b8' : '#475569');
+            c.lineWidth = isActive ? 2.5 : 1.6;
+            c.beginPath();
+            c.arc(cx, cy, loopR, 0.4, Math.PI * 2 - 0.4);
+            c.stroke();
+
+            const arrowAngle = 0.4;
+            drawArrowHead(c, cx + loopR * Math.cos(arrowAngle), cy + loopR * Math.sin(arrowAngle), arrowAngle + Math.PI / 2);
+
+            c.fillStyle = isDark ? '#38bdf8' : '#0284c7';
+            c.font = "bold 10px 'Fira Code', monospace";
+            c.textAlign = 'center';
+            c.fillText(label, cx, cy - loopR - 3);
+        }
+
+        function drawEdge(c, from, to, label, curved, isActive) {
+            const isDark = isDarkTheme();
+            const dx = to.x - from.x;
+            const dy = to.y - from.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist < 1) return;
+
+            const angle = Math.atan2(dy, dx);
+            c.strokeStyle = isActive ? '#06b6d4' : (isDark ? '#94a3b8' : '#475569');
+            c.lineWidth = isActive ? 2.5 : 1.6;
+
+            if (curved) {
+                const curveOffset = 22;
+                const midX = (from.x + to.x) / 2 - Math.sin(angle) * curveOffset;
+                const midY = (from.y + to.y) / 2 + Math.cos(angle) * curveOffset;
+
+                c.beginPath();
+                c.moveTo(from.x, from.y);
+                c.quadraticCurveTo(midX, midY, to.x, to.y);
+                c.stroke();
+
+                const t = 0.85;
+                const arrowX = (1 - t) * (1 - t) * from.x + 2 * (1 - t) * t * midX + t * t * to.x;
+                const arrowY = (1 - t) * (1 - t) * from.y + 2 * (1 - t) * t * midY + t * t * to.y;
+                drawArrowHead(c, arrowX, arrowY, Math.atan2(to.y - midY, to.x - midX));
+
+                c.fillStyle = isDark ? '#38bdf8' : '#0284c7';
+                c.font = "bold 10px 'Fira Code', monospace";
+                c.textAlign = 'center';
+                c.fillText(label, midX, midY);
+            } else {
+                const startX = from.x + nodeRadius * Math.cos(angle);
+                const startY = from.y + nodeRadius * Math.sin(angle);
+                const endX = to.x - nodeRadius * Math.cos(angle);
+                const endY = to.y - nodeRadius * Math.sin(angle);
+
+                c.beginPath();
+                c.moveTo(startX, startY);
+                c.lineTo(endX, endY);
+                c.stroke();
+                drawArrowHead(c, endX, endY, angle);
+
+                c.fillStyle = isDark ? '#38bdf8' : '#0284c7';
+                c.font = "bold 10px 'Fira Code', monospace";
+                c.textAlign = 'center';
+                c.fillText(label, (startX + endX) / 2 - Math.sin(angle) * 8, (startY + endY) / 2 + Math.cos(angle) * 8);
+            }
+        }
+
+        function drawArrowHead(c, x, y, angle) {
+            const headlen = 9;
+            c.fillStyle = c.strokeStyle;
+            c.beginPath();
+            c.moveTo(x, y);
+            c.lineTo(x - headlen * Math.cos(angle - Math.PI / 7), y - headlen * Math.sin(angle - Math.PI / 7));
+            c.lineTo(x - headlen * Math.cos(angle + Math.PI / 7), y - headlen * Math.sin(angle + Math.PI / 7));
+            c.closePath();
+            c.fill();
+        }
+
+        function drawStates(c, simActiveState) {
+            const isDark = isDarkTheme();
+            const reachable = getReachableStatesList();
+            const highlightPair = minAlgorithmState.activeHighlightPair || [];
+
+            states.forEach(node => {
+                const isSelected = selectedStateIds.includes(node.id);
+                const isInitial = (node.id === initialStateId);
+                const isFinal = acceptingStateIds.includes(node.id);
+                const isActive = (simActiveState === node.id);
+                const isUnreachable = !reachable.has(node.id);
+                const isPairHighlighted = highlightPair.includes(node.id);
+
+                // Destaque de par da tabela de distinguibilidade
+                if (isPairHighlighted) {
+                    c.beginPath();
+                    c.arc(node.x, node.y, nodeRadius + 8, 0, Math.PI * 2);
+                    c.fillStyle = 'rgba(245, 158, 11, 0.35)';
+                    c.fill();
+                } else if (isActive) {
+                    c.beginPath();
+                    c.arc(node.x, node.y, nodeRadius + 6, 0, Math.PI * 2);
+                    c.fillStyle = 'rgba(6, 182, 212, 0.3)';
+                    c.fill();
+                } else if (isSelected) {
+                    c.beginPath();
+                    c.arc(node.x, node.y, nodeRadius + 5, 0, Math.PI * 2);
+                    c.fillStyle = 'rgba(99, 102, 241, 0.25)';
+                    c.fill();
+                }
+
+                // Círculo
+                c.beginPath();
+                c.arc(node.x, node.y, nodeRadius, 0, Math.PI * 2);
+                c.fillStyle = isDark ? '#0f172a' : '#ffffff';
+                c.fill();
+
+                // Borda
+                c.lineWidth = (isPairHighlighted || isSelected) ? 2.5 : 1.8;
+                if (isPairHighlighted) {
+                    c.strokeStyle = '#f59e0b';
+                } else if (isUnreachable) {
+                    c.strokeStyle = '#f59e0b';
+                    c.setLineDash([4, 3]);
+                } else {
+                    c.strokeStyle = isSelected ? '#6366f1' : (isDark ? '#e2e8f0' : '#1e293b');
+                }
+                c.stroke();
+                c.setLineDash([]);
+
+                if (isFinal) {
+                    c.beginPath();
+                    c.arc(node.x, node.y, nodeRadius - 5, 0, Math.PI * 2);
+                    c.stroke();
+                }
+
+                if (isInitial) {
+                    const arrowStartX = node.x - nodeRadius - 22;
+                    const arrowEndX = node.x - nodeRadius;
+                    c.strokeStyle = '#06b6d4';
+                    c.fillStyle = '#06b6d4';
+                    c.lineWidth = 2;
+                    c.beginPath();
+                    c.moveTo(arrowStartX, node.y);
+                    c.lineTo(arrowEndX, node.y);
+                    c.stroke();
+                    drawArrowHead(c, arrowEndX, node.y, 0);
+                }
+
+                c.fillStyle = isDark ? '#f8fafc' : '#0f172a';
+                const fontSize = getNodeFontSize(c, node.id, 13, nodeRadius);
+                c.font = `bold ${fontSize}px 'Fira Code', monospace`;
+                c.textAlign = 'center';
+                c.fillText(node.id, node.x, node.y + (fontSize / 3));
+            });
+        }
+
+        function drawSelectionBox(c) {
+            const x = Math.min(boxSelectStart.x, boxSelectCurrent.x);
+            const y = Math.min(boxSelectStart.y, boxSelectCurrent.y);
+            const w = Math.abs(boxSelectStart.x - boxSelectCurrent.x);
+            const h = Math.abs(boxSelectStart.y - boxSelectCurrent.y);
+            c.fillStyle = 'rgba(99, 102, 241, 0.15)';
+            c.fillRect(x, y, w, h);
+            c.strokeStyle = '#6366f1';
+            c.lineWidth = 1;
+            c.strokeRect(x, y, w, h);
+        }
+
+        // ----------------- EVENTOS DE MOUSE NO CANVAS -----------------
+        function getCanvasMousePos(evt) {
+            const rect = canvas.getBoundingClientRect();
+            return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
+        }
+
+        function getNodeAtPos(pos) {
+            for (let i = states.length - 1; i >= 0; i--) {
+                const s = states[i];
+                if (Math.hypot(s.x - pos.x, s.y - pos.y) <= nodeRadius) return s;
+            }
+            return null;
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 2) return;
+            const pos = getCanvasMousePos(e);
+            const clickedNode = getNodeAtPos(pos);
+
+            if (e.shiftKey || drawModeActive) {
+                if (clickedNode) {
+                    isDrawingTransition = true;
+                    transitionStartNode = clickedNode;
+                    mouseCurrentPos = pos;
+                }
+                return;
+            }
+
+            if (clickedNode) {
+                isDraggingNode = true;
+                dragStartPos = pos;
+                if (!selectedStateIds.includes(clickedNode.id)) {
+                    selectedStateIds = (e.ctrlKey || e.metaKey) ? [...selectedStateIds, clickedNode.id] : [clickedNode.id];
+                }
+                initialSelectedPositions = selectedStateIds.map(id => {
+                    const n = states.find(s => s.id === id);
+                    return { id, x: n.x, y: n.y };
+                });
+            } else {
+                if (!e.ctrlKey && !e.metaKey) selectedStateIds = [];
+                isBoxSelecting = true;
+                boxSelectStart = pos;
+                boxSelectCurrent = pos;
+            }
+            redrawGraph();
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const pos = getCanvasMousePos(e);
+            mouseCurrentPos = pos;
+
+            if (isDrawingTransition) {
+                redrawGraph();
+            } else if (isDraggingNode) {
+                const dx = pos.x - dragStartPos.x;
+                const dy = pos.y - dragStartPos.y;
+                initialSelectedPositions.forEach(item => {
+                    const node = states.find(s => s.id === item.id);
+                    if (node) { node.x = item.x + dx; node.y = item.y + dy; }
+                });
+                redrawGraph();
+            } else if (isBoxSelecting) {
+                boxSelectCurrent = pos;
+                const x1 = Math.min(boxSelectStart.x, boxSelectCurrent.x);
+                const y1 = Math.min(boxSelectStart.y, boxSelectCurrent.y);
+                const x2 = Math.max(boxSelectStart.x, boxSelectCurrent.x);
+                const y2 = Math.max(boxSelectStart.y, boxSelectCurrent.y);
+                selectedStateIds = states.filter(s => s.x >= x1 && s.x <= x2 && s.y >= y1 && s.y <= y2).map(s => s.id);
+                redrawGraph();
+            }
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            const pos = getCanvasMousePos(e);
+            if (isDrawingTransition && transitionStartNode) {
+                const targetNode = getNodeAtPos(pos);
+                if (targetNode) openTransitionConfigModal(transitionStartNode.id, targetNode.id);
+                isDrawingTransition = false;
+                transitionStartNode = null;
+                redrawGraph();
+            } else if (isDraggingNode) {
+                isDraggingNode = false;
+                saveHistory();
+                saveToLocalStorage();
+            } else if (isBoxSelecting) {
+                isBoxSelecting = false;
+                redrawGraph();
+            }
+        });
+
+        canvas.addEventListener('dblclick', (e) => {
+            const pos = getCanvasMousePos(e);
+            const node = getNodeAtPos(pos);
+            if (node) {
+                toggleAcceptance(node.id);
+            } else {
+                addNewState(pos.x, pos.y);
+            }
+        });
+
+        let contextNodeId = null;
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const pos = getCanvasMousePos(e);
+            const node = getNodeAtPos(pos);
+            const menu = document.getElementById('canvas-context-menu');
+            if (node) {
+                contextNodeId = node.id;
+                menu.style.left = `${e.clientX}` + 'px';
+                menu.style.top = `${e.clientY}` + 'px';
+                menu.classList.remove('hidden');
+            } else {
+                menu.classList.add('hidden');
+            }
+        });
+
+        window.addEventListener('click', () => {
+            document.getElementById('canvas-context-menu')?.classList.add('hidden');
+        });
+
+        function contextSetInitial() { if (contextNodeId) setInitialState(contextNodeId); }
+        function contextToggleAcceptance() { if (contextNodeId) toggleAcceptance(contextNodeId); }
+        function contextRenameState() {
+            if (!contextNodeId) return;
+            const oldId = contextNodeId;
+            openPromptModal("Renomear Estado", `Novo nome para "${oldId}":`, oldId, (newId) => {
+                if (!newId || newId === oldId) return;
+                if (states.some(s => s.id === newId)) { showAlert("Erro", `O estado "${newId}" já existe.`); return; }
+                saveHistory();
+                const node = states.find(s => s.id === oldId);
+                if (node) node.id = newId;
+                if (initialStateId === oldId) initialStateId = newId;
+                acceptingStateIds = acceptingStateIds.map(id => id === oldId ? newId : id);
+                if (transitions[oldId]) { transitions[newId] = transitions[oldId]; delete transitions[oldId]; }
+                for (let f in transitions) {
+                    for (let sym in transitions[f]) {
+                        if (transitions[f][sym] === oldId) transitions[f][sym] = newId;
+                    }
+                }
+                buildStateTable();
+                redrawGraph();
+                recalculateMinimization();
+                saveToLocalStorage();
+            });
+        }
+        function contextDeleteState() { if (contextNodeId) removeState(contextNodeId); }
+
+        // Modal Transição
+        let transConfigFrom = null;
+        let transConfigTo = null;
+        function openTransitionConfigModal(fromId, toId) {
+            transConfigFrom = fromId;
+            transConfigTo = toId;
+            document.getElementById('transition-modal-desc').textContent = `Transições de ${fromId} para ${toId}:`;
+            const container = document.getElementById('transition-symbols-container');
+            container.innerHTML = '';
+            const currentTrans = transitions[fromId] || {};
+            alphabet.forEach(sym => {
+                const isSet = (currentTrans[sym] === toId);
+                const btn = document.createElement('button');
+                btn.className = `px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition border ${isSet ? 'bg-cyan-500 text-slate-950 border-cyan-400' : 'bg-slate-100 dark:bg-slate-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'}`;
+                btn.textContent = sym;
+                btn.onclick = () => {
+                    btn.classList.toggle('bg-cyan-500');
+                    btn.classList.toggle('text-slate-950');
+                    btn.classList.toggle('border-cyan-400');
+                };
+                container.appendChild(btn);
+            });
+            document.getElementById('transition-modal').classList.remove('hidden');
+        }
+
+        function closeTransitionModal() { document.getElementById('transition-modal').classList.add('hidden'); }
+        function confirmTransitionConfig() {
+            if (!transConfigFrom || !transConfigTo) return;
+            saveHistory();
+            if (!transitions[transConfigFrom]) transitions[transConfigFrom] = {};
+            const container = document.getElementById('transition-symbols-container');
+            const btns = container.querySelectorAll('button');
+            btns.forEach(btn => {
+                const sym = btn.textContent;
+                const isSelected = btn.classList.contains('bg-cyan-500');
+                if (isSelected) transitions[transConfigFrom][sym] = transConfigTo;
+                else if (transitions[transConfigFrom][sym] === transConfigTo) delete transitions[transConfigFrom][sym];
+            });
+            closeTransitionModal();
+            buildStateTable();
+            redrawGraph();
+            recalculateMinimization();
+            saveToLocalStorage();
+        }
+
+        function autoLayoutCircle() {
+            if (states.length === 0) return;
+            saveHistory();
+            const rect = canvas.getBoundingClientRect();
+            const cx = rect.width / 2;
+            const cy = rect.height / 2;
+            const radius = Math.min(cx, cy) * 0.65;
+            const angleStep = (Math.PI * 2) / states.length;
+            states.forEach((s, idx) => {
+                s.x = cx + radius * Math.cos(idx * angleStep - Math.PI / 2);
+                s.y = cy + radius * Math.sin(idx * angleStep - Math.PI / 2);
+            });
+            redrawGraph();
+            saveToLocalStorage();
+        }
+
+        function layoutGrid() {
+            if (states.length === 0) return;
+            saveHistory();
+            const cols = Math.ceil(Math.sqrt(states.length));
+            const spacingX = 100;
+            const spacingY = 85;
+            states.forEach((s, idx) => {
+                s.x = 80 + (idx % cols) * spacingX;
+                s.y = 80 + Math.floor(idx / cols) * spacingY;
+            });
+            centerGraphCoordinates();
+            redrawGraph();
+            saveToLocalStorage();
+        }
+
+        function manualCenterGraph() { centerGraphCoordinates(); redrawGraph(); }
+        function centerGraphCoordinates() {
+            if (states.length === 0) return;
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            states.forEach(s => {
+                if (s.x < minX) minX = s.x; if (s.x > maxX) maxX = s.x;
+                if (s.y < minY) minY = s.y; if (s.y > maxY) maxY = s.y;
+            });
+            const gw = maxX - minX;
+            const gh = maxY - minY;
+            const rect = canvas.getBoundingClientRect();
+            const cx = rect.width / 2;
+            const cy = rect.height / 2;
+            const dx = cx - (minX + gw / 2);
+            const dy = cy - (minY + gh / 2);
+            states.forEach(s => { s.x += dx; s.y += dy; });
+        }
+
+        // ----------------- SIMULADOR DE CADEIAS -----------------
+        let simInterval = null;
+        let simStepState = { string: "", index: 0, currentState: null, history: [] };
+
+        function runFastSimulation() {
+            stopSimulation();
+            const input = document.getElementById('simulation-input').value.trim();
+            const feedback = document.getElementById('simulation-feedback');
+            feedback.classList.remove('hidden');
+
+            if (!initialStateId) {
+                feedback.className = "p-2 rounded-lg text-center font-bold text-xs bg-rose-500/10 text-rose-600 border border-rose-500/20";
+                feedback.textContent = "Defina o estado inicial.";
+                return;
+            }
+
+            let curr = initialStateId;
+            let path = [curr];
+            for (let i = 0; i < input.length; i++) {
+                const sym = input[i];
+                if (!alphabet.includes(sym) || !transitions[curr]?.[sym]) {
+                    feedback.className = "p-2 rounded-lg text-center font-bold text-xs bg-rose-500/10 text-rose-600 border border-rose-500/20";
+                    feedback.textContent = `Transição indefinida ou símbolo inválido '${sym}'. Rejeitada!`;
+                    return;
+                }
+                curr = transitions[curr][sym];
+                path.push(curr);
+            }
+
+            const isAccepted = acceptingStateIds.includes(curr);
+            feedback.className = `p-2 rounded-lg text-center font-bold text-xs ${isAccepted ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 dark:text-rose-455 border border-rose-500/20'}`;
+            feedback.innerHTML = `${isAccepted ? '✓ Aceita!' : '✕ Rejeitada!'} Terminou em <strong>${curr}</strong> (${path.join(' → ')})`;
+            redrawGraph(curr);
+        }
+
+        function startStepByStep() {
+            const input = document.getElementById('simulation-input').value.trim();
+            if (!initialStateId) { showAlert("Erro", "Defina o estado inicial."); return; }
+            stopSimulation();
+            document.getElementById('step-panel').classList.remove('hidden');
+            simStepState = { string: input, index: 0, currentState: initialStateId, history: [initialStateId] };
+            updateStepDisplay();
+            redrawGraph(initialStateId);
+        }
+
+        function updateStepDisplay() {
+            const strDisplay = document.getElementById('step-string-display');
+            const statusDisplay = document.getElementById('step-status');
+            const s = simStepState.string;
+            const idx = simStepState.index;
+
+            let html = "";
+            for (let i = 0; i < s.length; i++) {
+                if (i === idx) html += `<span class="bg-cyan-500 text-slate-950 px-1 rounded shadow">${s[i]}</span>`;
+                else if (i < idx) html += `<span class="text-slate-400">${s[i]}</span>`;
+                else html += `<span>${s[i]}</span>`;
+            }
+            strDisplay.innerHTML = html || "<span class='text-slate-400'>ε</span>";
+            statusDisplay.textContent = `Estado: ${simStepState.currentState} (${idx}/${s.length})`;
+        }
+
+        function nextStep() {
+            const s = simStepState.string;
+            const idx = simStepState.index;
+            if (idx >= s.length) { stopSimulation(); runFastSimulation(); return; }
+            const sym = s[idx];
+            const next = transitions[simStepState.currentState]?.[sym];
+            if (!next) { showAlert("Erro", `Transição indefinida em "${simStepState.currentState}" por "${sym}".`); stopSimulation(); return; }
+            simStepState.currentState = next;
+            simStepState.index++;
+            simStepState.history.push(next);
+            updateStepDisplay();
+            redrawGraph(next);
+            if (simStepState.index === s.length) runFastSimulation();
+        }
+
+        function prevStep() {
+            if (simStepState.index <= 0) return;
+            simStepState.index--;
+            simStepState.history.pop();
+            simStepState.currentState = simStepState.history[simStepState.history.length - 1];
+            updateStepDisplay();
+            redrawGraph(simStepState.currentState);
+        }
+
+        function togglePlayPause() {
+            const btn = document.getElementById('play-pause-btn');
+            if (simInterval) {
+                clearInterval(simInterval);
+                simInterval = null;
+                btn.textContent = "▶ Play";
+            } else {
+                btn.textContent = "⏸ Pause";
+                simInterval = setInterval(() => {
+                    if (simStepState.index >= simStepState.string.length) {
+                        clearInterval(simInterval);
+                        simInterval = null;
+                        btn.textContent = "▶ Play";
+                    } else nextStep();
+                }, 800);
+            }
+        }
+
+        function stopSimulation() {
+            if (simInterval) { clearInterval(simInterval); simInterval = null; }
+            document.getElementById('play-pause-btn').textContent = "▶ Play";
+            document.getElementById('step-panel').classList.add('hidden');
+            document.getElementById('simulation-feedback').classList.add('hidden');
+            redrawGraph();
+        }
+
+        // =========================================================================
+        // ----------------- MOTOR DE MINIMIZAÇÃO DE AFD ---------------------------
+        // =========================================================================
+
+        function computeMinimizationAlgorithm() {
+            const reachableSet = getReachableStatesList();
+            const reachable = states.filter(s => reachableSet.has(s.id));
+            const unreachables = states.filter(s => !reachableSet.has(s.id));
+
+            const sortedStates = [...reachable].sort((a, b) => a.id.localeCompare(b.id));
+            const n = sortedStates.length;
+
+            const pairMap = {};
+            const pairs = [];
+            for (let i = 1; i < n; i++) {
+                for (let j = 0; j < i; j++) {
+                    const p = sortedStates[i].id;
+                    const q = sortedStates[j].id;
+                    const key = `${p},${q}`;
+                    const pairObj = { p, q, marked: false, step: null, symbol: null, reason: "" };
+                    pairMap[key] = pairObj;
+                    pairs.push(pairObj);
+                }
+            }
+
+            const stepsHistory = [];
+
+            // Passo 0: Base
+            pairs.forEach(pair => {
+                const pIsFinal = acceptingStateIds.includes(pair.p);
+                const qIsFinal = acceptingStateIds.includes(pair.q);
+                if (pIsFinal !== qIsFinal) {
+                    pair.marked = true;
+                    pair.step = 0;
+                    pair.symbol = "ε";
+                    pair.reason = `(${pair.p}, ${pair.q}) são 0-distinguíveis pois ${pIsFinal ? pair.p : pair.q} ∈ F e ${!pIsFinal ? pair.p : pair.q} ∉ F.`;
+                    stepsHistory.push({
+                        stepType: 'mark',
+                        iteration: 0,
+                        pair: `${pair.p},${pair.q}`,
+                        p: pair.p,
+                        q: pair.q,
+                        reason: pair.reason
+                    });
+                }
+            });
+
+            // Iterações k >= 1
+            let iteration = 1;
+            let changed = true;
+
+            function isPairMarked(u, v) {
+                if (u === v) return false;
+                const k1 = `${u},${v}`;
+                const k2 = `${v},${u}`;
+                const obj = pairMap[k1] || pairMap[k2];
+                return obj ? obj.marked : false;
+            }
+
+            while (changed) {
+                changed = false;
+                for (let pair of pairs) {
+                    if (pair.marked) continue;
+                    for (let sym of alphabet) {
+                        const nextP = transitions[pair.p]?.[sym];
+                        const nextQ = transitions[pair.q]?.[sym];
+                        if (nextP && nextQ && nextP !== nextQ) {
+                            if (isPairMarked(nextP, nextQ)) {
+                                pair.marked = true;
+                                pair.step = iteration;
+                                pair.symbol = sym;
+                                pair.reason = `(${pair.p}, ${pair.q}) são distinguidos por '${sym}', pois δ(${pair.p}, ${sym}) = ${nextP} e δ(${pair.q}, ${sym}) = ${nextQ}, e (${nextP}, ${nextQ}) já foi marcado!`;
+                                changed = true;
+                                stepsHistory.push({
+                                    stepType: 'mark',
+                                    iteration,
+                                    pair: `${pair.p},${pair.q}`,
+                                    p: pair.p,
+                                    q: pair.q,
+                                    reason: pair.reason
+                                });
+                                break;
+                            }
+                        }
+                    }
+                }
+                iteration++;
+            }
+
+            // Equivalência Disjoint Set
+            const parent = {};
+            sortedStates.forEach(s => parent[s.id] = s.id);
+            function find(i) { if (parent[i] === i) return i; return parent[i] = find(parent[i]); }
+            function union(i, j) { const rI = find(i); const rJ = find(j); if (rI !== rJ) parent[rI] = rJ; }
+
+            pairs.forEach(pair => { if (!pair.marked) union(pair.p, pair.q); });
+
+            const groupsMap = {};
+            sortedStates.forEach(s => {
+                const root = find(s.id);
+                if (!groupsMap[root]) groupsMap[root] = [];
+                groupsMap[root].push(s.id);
+            });
+
+            const equivalenceClasses = Object.values(groupsMap).map(grp => grp.sort());
+
+            // AFD Minimizado
+            const minStates = [];
+            const minTransitions = {};
+            const minAccepting = [];
+            let minInitial = "";
+
+            equivalenceClasses.forEach((grp, idx) => {
+                const grpId = grp.length > 1 ? `[${grp.join(',')}]` : grp[0];
+                minStates.push({ id: grpId, members: grp, x: 100 + (idx % 3) * 120, y: 100 + Math.floor(idx / 3) * 100 });
+                if (grp.includes(initialStateId)) minInitial = grpId;
+                if (grp.some(sid => acceptingStateIds.includes(sid))) minAccepting.push(grpId);
+            });
+
+            equivalenceClasses.forEach(grp => {
+                const rep = grp[0];
+                const fromGrpId = grp.length > 1 ? `[${grp.join(',')}]` : grp[0];
+                minTransitions[fromGrpId] = {};
+                alphabet.forEach(sym => {
+                    const destOrig = transitions[rep]?.[sym];
+                    if (destOrig) {
+                        const targetGrp = equivalenceClasses.find(g => g.includes(destOrig));
+                        if (targetGrp) {
+                            const targetGrpId = targetGrp.length > 1 ? `[${targetGrp.join(',')}]` : targetGrp[0];
+                            minTransitions[fromGrpId][sym] = targetGrpId;
+                        }
+                    }
+                });
+            });
+
+            const partitionsHistory = [];
+            const p0_f = sortedStates.filter(s => acceptingStateIds.includes(s.id)).map(s => s.id);
+            const p0_nf = sortedStates.filter(s => !acceptingStateIds.includes(s.id)).map(s => s.id);
+            const p0 = [];
+            if (p0_f.length > 0) p0.push(p0_f);
+            if (p0_nf.length > 0) p0.push(p0_nf);
+            partitionsHistory.push({ name: "P₀ (Finais vs Não-Finais)", groups: p0 });
+            partitionsHistory.push({ name: "P_final (Classes de Equivalência Mínimas)", groups: equivalenceClasses });
+
+            return {
+                reachableStates: sortedStates,
+                unreachableStates: unreachables,
+                pairs,
+                stepsHistory,
+                equivalenceClasses,
+                partitionsHistory,
+                minimizedAutomaton: { alphabet: [...alphabet], states: minStates, initialState: minInitial, accepting: minAccepting, transitions: minTransitions }
+            };
+        }
+
+        function recalculateMinimization() {
+            const data = computeMinimizationAlgorithm();
+            minAlgorithmState.reachableStates = data.reachableStates;
+            minAlgorithmState.unreachableStates = data.unreachableStates;
+            minAlgorithmState.pairs = data.pairs;
+            minAlgorithmState.stepsHistory = data.stepsHistory;
+            minAlgorithmState.equivalenceClasses = data.equivalenceClasses;
+            minAlgorithmState.partitionsHistory = data.partitionsHistory;
+            minAlgorithmState.minimizedAutomaton = data.minimizedAutomaton;
+            minAlgorithmState.currentStepIndex = 0;
+            minAlgorithmState.isPlaying = false;
+            minAlgorithmState.activeHighlightPair = null;
+
+            renderDistinguishabilityMatrix();
+            updateTableStepUI();
+        }
+
+        function renderDistinguishabilityMatrix() {
+            const container = document.getElementById('dist-matrix-container');
+            const sorted = minAlgorithmState.reachableStates;
+            const n = sorted.length;
+
+            if (n <= 1) {
+                container.innerHTML = `<div class="text-xs text-slate-400 p-4 text-center">Cadastre pelo menos 2 estados alcançáveis para renderizar a matriz.</div>`;
+                return;
+            }
+
+            let html = `<table class="border-collapse text-xs code-font">`;
+            html += `<thead><tr><th class="p-1.5"></th>`;
+            for (let j = 0; j < n - 1; j++) {
+                html += `<th class="p-1.5 text-center text-cyan-600 dark:text-cyan-400 font-bold border-b border-slate-200 dark:border-slate-800">${sorted[j].id}</th>`;
+            }
+            html += `</tr></thead><tbody>`;
+
+            for (let i = 1; i < n; i++) {
+                html += `<tr><th class="p-1.5 text-right text-cyan-600 dark:text-cyan-400 font-bold border-r border-slate-200 dark:border-slate-800 pr-2">${sorted[i].id}</th>`;
+                for (let j = 0; j < n - 1; j++) {
+                    if (j < i) {
+                        const p = sorted[i].id;
+                        const q = sorted[j].id;
+                        const key = `${p},${q}`;
+                        const pair = minAlgorithmState.pairs.find(pObj => (pObj.p === p && pObj.q === q) || (pObj.p === q && pObj.q === p));
+                        
+                        let cellContent = "";
+                        let cellClass = "bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-center font-bold dist-matrix-cell cursor-pointer";
+                        
+                        if (minAlgorithmState.isChallengeMode) {
+                            const isUserMarked = !!minAlgorithmState.userMarks[key];
+                            cellContent = isUserMarked ? `<span class="text-cyan-500 font-extrabold">✕</span>` : `<span class="text-slate-300 dark:text-slate-700">·</span>`;
+                            cellClass += isUserMarked ? " bg-cyan-500/10 border-cyan-500/30" : "";
+                        } else {
+                            const currentStep = minAlgorithmState.stepsHistory[minAlgorithmState.currentStepIndex - 1];
+                            const isMarkedUpToNow = minAlgorithmState.stepsHistory.slice(0, minAlgorithmState.currentStepIndex).some(s => s.pair === key);
+
+                            if (isMarkedUpToNow && pair) {
+                                if (pair.step === 0) {
+                                    cellContent = `<span class="text-rose-500 font-extrabold">X₀</span>`;
+                                    cellClass += " bg-rose-500/10 border-rose-500/30";
+                                } else {
+                                    cellContent = `<span class="text-amber-500 font-extrabold">X<sub>${pair.step}</sub><span class="text-[8px] text-slate-400">(${pair.symbol})</span></span>`;
+                                    cellClass += " bg-amber-500/10 border-amber-500/30";
+                                }
+                            } else if (minAlgorithmState.currentStepIndex === minAlgorithmState.stepsHistory.length && !pair.marked) {
+                                cellContent = `<span class="text-emerald-500 font-bold">≡</span>`;
+                                cellClass += " bg-emerald-500/10 border-emerald-500/30";
+                            } else {
+                                cellContent = `<span class="text-slate-300 dark:text-slate-700">·</span>`;
+                            }
+
+                            if (currentStep && currentStep.pair === key) {
+                                cellClass += " ring-2 ring-cyan-500 animate-pulse bg-cyan-500/20";
+                            }
+                        }
+
+                        html += `<td class="${cellClass}" onclick="handleCellClick('${p}', '${q}')" style="width: 42px; height: 32px;">${cellContent}</td>`;
+                    } else {
+                        html += `<td class="bg-slate-200/20 dark:bg-slate-950/20 border border-transparent"></td>`;
+                    }
+                }
+                html += `</tr>`;
+            }
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function handleCellClick(p, q) {
+            minAlgorithmState.activeHighlightPair = [p, q];
+            const badge = document.getElementById('canvas-active-pair-badge');
+            if (badge) {
+                badge.textContent = `Par (${p}, ${q})`;
+                badge.classList.remove('hidden');
+            }
+            redrawGraph();
+
+            if (minAlgorithmState.isChallengeMode) {
+                const key = `${p},${q}`;
+                minAlgorithmState.userMarks[key] = !minAlgorithmState.userMarks[key];
+                renderDistinguishabilityMatrix();
+            }
+        }
+
+        function toggleChallengeMode() {
+            const chk = document.getElementById('chk-challenge-mode');
+            minAlgorithmState.isChallengeMode = chk.checked;
+            document.getElementById('challenge-controls').classList.toggle('hidden', !chk.checked);
+            minAlgorithmState.userMarks = {};
+            renderDistinguishabilityMatrix();
+        }
+
+        function checkStudentChallenge() {
+            const feedback = document.getElementById('challenge-feedback');
+            feedback.classList.remove('hidden');
+            let total = minAlgorithmState.pairs.length;
+            let correct = 0;
+
+            minAlgorithmState.pairs.forEach(pair => {
+                const key = `${pair.p},${pair.q}`;
+                const userMarked = !!minAlgorithmState.userMarks[key];
+                if (userMarked === pair.marked) correct++;
+            });
+
+            const pct = Math.round((correct / total) * 100);
+            if (pct === 100) {
+                feedback.className = "text-xs font-bold text-center p-2 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30";
+                feedback.innerHTML = `🎉 <strong>Perfeito! 100% de Acerto (${correct}/${total} células).</strong> Matriz preenchida corretamente!`;
+            } else {
+                feedback.className = "text-xs font-bold text-center p-2 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30";
+                feedback.innerHTML = `Nota: <strong>${pct}%</strong> (${correct}/${total} células corretas). Revise suas marcações.`;
+            }
+        }
+
+        function updateTableStepUI() {
+            const totalSteps = minAlgorithmState.stepsHistory.length;
+            const curr = minAlgorithmState.currentStepIndex;
+            document.getElementById('table-step-indicator').textContent = `Passo ${curr} de ${totalSteps}`;
+            document.getElementById('btn-table-prev').disabled = (curr <= 0);
+            document.getElementById('btn-table-next').disabled = (curr >= totalSteps);
+
+            const expBox = document.getElementById('table-step-explanation');
+            const badge = document.getElementById('canvas-active-pair-badge');
+
+            if (curr === 0) {
+                expBox.innerHTML = `<strong>Início do Algoritmo:</strong> Clique em <strong>"Avançar"</strong> ou <strong>"▶ Executar Passo a Passo"</strong> para iniciar a marcação inicial dos pares entre estados finais e não-finais (0-distinguibilidade).`;
+                minAlgorithmState.activeHighlightPair = null;
+                badge?.classList.add('hidden');
+            } else if (curr <= totalSteps) {
+                const step = minAlgorithmState.stepsHistory[curr - 1];
+                expBox.innerHTML = `<strong>Iteração ${step.iteration}:</strong> ${step.reason}`;
+                minAlgorithmState.activeHighlightPair = [step.p, step.q];
+                if (badge) {
+                    badge.textContent = `Destacando (${step.p}, ${step.q})`;
+                    badge.classList.remove('hidden');
+                }
+            }
+
+            if (curr === totalSteps && totalSteps > 0) {
+                expBox.innerHTML += `<br><span class="text-emerald-600 dark:text-emerald-400 font-bold">✓ Concluído! Pares não marcados são equivalentes e foram agrupados.</span>`;
+            }
+
+            renderEquivalenceClassesUI();
+            renderDistinguishabilityMatrix();
+            redrawGraph();
+        }
+
+        function nextTableStep() {
+            if (minAlgorithmState.currentStepIndex < minAlgorithmState.stepsHistory.length) {
+                minAlgorithmState.currentStepIndex++;
+                updateTableStepUI();
+            }
+        }
+
+        function prevTableStep() {
+            if (minAlgorithmState.currentStepIndex > 0) {
+                minAlgorithmState.currentStepIndex--;
+                updateTableStepUI();
+            }
+        }
+
+        function toggleTablePlay() {
+            const btn = document.getElementById('btn-table-play');
+            if (minAlgorithmState.isPlaying) {
+                clearInterval(minAlgorithmState.playTimer);
+                minAlgorithmState.isPlaying = false;
+                btn.textContent = "▶ Executar Passo a Passo";
+            } else {
+                minAlgorithmState.isPlaying = true;
+                btn.textContent = "⏸ Pausar";
+                minAlgorithmState.playTimer = setInterval(() => {
+                    if (minAlgorithmState.currentStepIndex >= minAlgorithmState.stepsHistory.length) {
+                        clearInterval(minAlgorithmState.playTimer);
+                        minAlgorithmState.isPlaying = false;
+                        btn.textContent = "▶ Executar Passo a Passo";
+                    } else {
+                        nextTableStep();
+                    }
+                }, 850);
+            }
+        }
+
+        function finishTableMinimization() {
+            if (minAlgorithmState.isPlaying) {
+                clearInterval(minAlgorithmState.playTimer);
+                minAlgorithmState.isPlaying = false;
+                document.getElementById('btn-table-play').textContent = "▶ Executar Passo a Passo";
+            }
+            minAlgorithmState.currentStepIndex = minAlgorithmState.stepsHistory.length;
+            updateTableStepUI();
+        }
+
+        function resetTableMinimization() {
+            if (minAlgorithmState.isPlaying) {
+                clearInterval(minAlgorithmState.playTimer);
+                minAlgorithmState.isPlaying = false;
+                document.getElementById('btn-table-play').textContent = "▶ Executar Passo a Passo";
+            }
+            minAlgorithmState.currentStepIndex = 0;
+            updateTableStepUI();
+        }
+
+        function renderEquivalenceClassesUI() {
+            const container = document.getElementById('equivalence-classes-container');
+            const eqClasses = minAlgorithmState.equivalenceClasses;
+            container.innerHTML = '';
+
+            document.getElementById('eq-original-count').textContent = states.length;
+            document.getElementById('eq-minimized-count').textContent = eqClasses.length;
+
+            eqClasses.forEach(grp => {
+                const badge = document.createElement('div');
+                const isMerged = grp.length > 1;
+                badge.className = `px-2 py-0.5 rounded-lg text-xs font-mono font-bold border ${isMerged ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-600 dark:text-cyan-300' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'}`;
+                badge.innerHTML = `[${grp.join(', ')}]`;
+                container.appendChild(badge);
+            });
+        }
+
+        function applyMinimizedDFA() {
+            if (!minAlgorithmState.minimizedAutomaton) {
+                showAlert("Aviso", "Execute a minimização primeiro.");
+                return;
+            }
+            saveHistory();
+            const min = minAlgorithmState.minimizedAutomaton;
+            alphabet = [...min.alphabet];
+            document.getElementById('alphabet-input').value = alphabet.join(', ');
+            states = JSON.parse(JSON.stringify(min.states));
+            initialStateId = min.initialState;
+            acceptingStateIds = [...min.accepting];
+            transitions = JSON.parse(JSON.stringify(min.transitions));
+
+            autoLayoutCircle();
+            buildStateTable();
+            redrawGraph();
+            recalculateMinimization();
+            saveToLocalStorage();
+            showAlert("Sucesso", "O AFD minimizado foi aplicado diretamente na tela de desenho!");
+        }
+
+        // ----------------- RENDERIZAÇÃO DE PARTIÇÕES E COMPARAÇÃO -----------------
+        function renderPartitionsContent() {
+            const data = computeMinimizationAlgorithm();
+            const list = document.getElementById('partition-steps-list');
+            list.innerHTML = '';
+
+            data.partitionsHistory.forEach(part => {
+                const card = document.createElement('div');
+                card.className = "p-2.5 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-1.5";
+                
+                const title = document.createElement('div');
+                title.className = "text-xs font-bold text-slate-700 dark:text-slate-200 font-mono";
+                title.textContent = part.name;
+                card.appendChild(title);
+
+                const grpsBox = document.createElement('div');
+                grpsBox.className = "flex flex-wrap gap-1.5";
+                part.groups.forEach(g => {
+                    const pill = document.createElement('span');
+                    pill.className = "px-2 py-0.5 rounded text-xs font-mono font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-cyan-600 dark:text-cyan-400";
+                    pill.textContent = `{ ${g.join(', ')} }`;
+                    grpsBox.appendChild(pill);
+                });
+                card.appendChild(grpsBox);
+                list.appendChild(card);
+            });
+
+            const min = data.minimizedAutomaton;
+            document.getElementById('formal-5tuple-display').innerHTML = `
+                <div><strong>Q'</strong> = { ${min.states.map(s => s.id).join(', ')} }</div>
+                <div><strong>Σ</strong> = { ${min.alphabet.join(', ')} }</div>
+                <div><strong>q₀'</strong> = ${min.initialState}</div>
+                <div><strong>F'</strong> = { ${min.accepting.join(', ')} }</div>
+            `;
+
+            const table = document.getElementById('min-trans-table');
+            let ths = `<thead><tr class="text-slate-400 border-b border-slate-200 dark:border-slate-800 text-[11px]"><th class="py-1">Estado [q]</th>`;
+            min.alphabet.forEach(sym => { ths += `<th class="py-1 font-mono text-cyan-600 dark:text-cyan-400 text-center">δ'([q], ${sym})</th>`; });
+            ths += `</tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-900/40 text-[11px]">`;
+
+            min.states.forEach(s => {
+                let isInit = (s.id === min.initialState) ? "→ " : "";
+                let isFinal = min.accepting.includes(s.id) ? " *" : "";
+                ths += `<tr><td class="py-1 font-mono font-bold text-slate-700 dark:text-slate-200">${isInit}${s.id}${isFinal}</td>`;
+                min.alphabet.forEach(sym => {
+                    const dest = min.transitions[s.id]?.[sym] || "—";
+                    ths += `<td class="py-1 text-center font-mono font-semibold text-slate-600 dark:text-slate-300">${dest}</td>`;
+                });
+                ths += `</tr>`;
+            });
+            ths += `</tbody>`;
+            table.innerHTML = ths;
+        }
+
+        let compareMinAutomaton = null;
+        function renderCompareContent() {
+            const data = computeMinimizationAlgorithm();
+            compareMinAutomaton = data.minimizedAutomaton;
+            document.getElementById('compare-original-badge').textContent = states.length;
+            document.getElementById('compare-min-badge').textContent = compareMinAutomaton.states.length;
+            redrawCompareCanvases();
+        }
+
+        function redrawCompareCanvases() {
+            const cvOrig = document.getElementById('canvas-compare-orig');
+            const cvMin = document.getElementById('canvas-compare-min');
+            if (!cvOrig || !cvMin || !cvOrig.parentElement) return;
+
+            const rect1 = cvOrig.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+
+            cvOrig.width = rect1.width * dpr; cvOrig.height = rect1.height * dpr;
+            cvOrig.style.width = `${rect1.width}` + 'px'; cvOrig.style.height = `${rect1.height}` + 'px';
+            const ctx1 = cvOrig.getContext('2d'); ctx1.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            cvMin.width = rect1.width * dpr; cvMin.height = rect1.height * dpr;
+            cvMin.style.width = `${rect1.width}` + 'px'; cvMin.style.height = `${rect1.height}` + 'px';
+            const ctx2 = cvMin.getContext('2d'); ctx2.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            drawGrid(ctx1);
+            drawGenericGraph(ctx1, states, transitions, initialStateId, acceptingStateIds, alphabet, rect1.width, rect1.height);
+
+            if (compareMinAutomaton) {
+                drawGrid(ctx2);
+                drawGenericGraph(ctx2, compareMinAutomaton.states, compareMinAutomaton.transitions, compareMinAutomaton.initialState, compareMinAutomaton.accepting, compareMinAutomaton.alphabet, rect1.width, rect1.height);
+            }
+        }
+
+        function drawGenericGraph(c, gStates, gTrans, gInitial, gAccepting, gAlphabet, w, h) {
+            if (!gStates || gStates.length === 0) return;
+            const isDark = isDarkTheme();
+            const cx = w / 2;
+            const cy = h / 2;
+            const radius = Math.min(cx, cy) * 0.6;
+            const angleStep = (Math.PI * 2) / gStates.length;
+
+            const posMap = {};
+            gStates.forEach((node, idx) => {
+                const nx = (gStates.length === 1) ? cx : cx + radius * Math.cos(idx * angleStep - Math.PI / 2);
+                const ny = (gStates.length === 1) ? cy : cy + radius * Math.sin(idx * angleStep - Math.PI / 2);
+                posMap[node.id] = { x: nx, y: ny };
+            });
+
+            // Transições
+            const edgeGroups = {};
+            gStates.forEach(fromNode => {
+                const trans = gTrans[fromNode.id] || {};
+                gAlphabet.forEach(sym => {
+                    const destId = trans[sym];
+                    if (destId && posMap[destId]) {
+                        const key = `${fromNode.id}->${destId}`;
+                        if (!edgeGroups[key]) edgeGroups[key] = [];
+                        edgeGroups[key].push(sym);
+                    }
+                });
+            });
+
+            c.strokeStyle = isDark ? '#94a3b8' : '#475569';
+            c.lineWidth = 1.4;
+
+            for (let key in edgeGroups) {
+                const [fromId, toId] = key.split("->");
+                const fromP = posMap[fromId];
+                const toP = posMap[toId];
+                const label = edgeGroups[key].join(", ");
+
+                if (fromId === toId) {
+                    const loopR = 12;
+                    const lcx = fromP.x;
+                    const lcy = fromP.y - 18 - loopR + 4;
+                    c.beginPath();
+                    c.arc(lcx, lcy, loopR, 0.4, Math.PI * 2 - 0.4);
+                    c.stroke();
+                    drawArrowHead(c, lcx + loopR * Math.cos(0.4), lcy + loopR * Math.sin(0.4), 0.4 + Math.PI / 2);
+                    c.fillStyle = isDark ? '#38bdf8' : '#0284c7';
+                    c.font = "bold 9px 'Fira Code', monospace";
+                    c.textAlign = 'center';
+                    c.fillText(label, lcx, lcy - loopR - 2);
+                } else {
+                    const dx = toP.x - fromP.x;
+                    const dy = toP.y - fromP.y;
+                    const angle = Math.atan2(dy, dx);
+                    const sx = fromP.x + 18 * Math.cos(angle);
+                    const sy = fromP.y + 18 * Math.sin(angle);
+                    const ex = toP.x - 18 * Math.cos(angle);
+                    const ey = toP.y - 18 * Math.sin(angle);
+
+                    c.beginPath();
+                    c.moveTo(sx, sy); c.lineTo(ex, ey); c.stroke();
+                    drawArrowHead(c, ex, ey, angle);
+
+                    c.fillStyle = isDark ? '#38bdf8' : '#0284c7';
+                    c.font = "bold 9px 'Fira Code', monospace";
+                    c.textAlign = 'center';
+                    c.fillText(label, (sx + ex) / 2 - Math.sin(angle) * 6, (sy + ey) / 2 + Math.cos(angle) * 6);
+                }
+            }
+
+            // Estados
+            gStates.forEach(node => {
+                const pos = posMap[node.id];
+                const isInitial = (node.id === gInitial);
+                const isFinal = gAccepting.includes(node.id);
+
+                c.beginPath();
+                c.arc(pos.x, pos.y, 18, 0, Math.PI * 2);
+                c.fillStyle = isDark ? '#0f172a' : '#ffffff';
+                c.fill();
+                c.strokeStyle = isDark ? '#e2e8f0' : '#1e293b';
+                c.lineWidth = 1.5;
+                c.stroke();
+
+                if (isFinal) {
+                    c.beginPath();
+                    c.arc(pos.x, pos.y, 14, 0, Math.PI * 2);
+                    c.stroke();
+                }
+
+                if (isInitial) {
+                    c.strokeStyle = '#06b6d4';
+                    c.fillStyle = '#06b6d4';
+                    c.lineWidth = 1.8;
+                    c.beginPath();
+                    c.moveTo(pos.x - 30, pos.y);
+                    c.lineTo(pos.x - 18, pos.y);
+                    c.stroke();
+                    drawArrowHead(c, pos.x - 18, pos.y, 0);
+                }
+
+                c.fillStyle = isDark ? '#f8fafc' : '#0f172a';
+                const fontSize = getNodeFontSize(c, node.id, 10, 18);
+                c.font = `bold ${fontSize}px 'Fira Code', monospace`;
+                c.textAlign = 'center';
+                c.fillText(node.id, pos.x, pos.y + (fontSize / 3));
+            });
+        }
+
+        function runSideBySideEquivalenceTest() {
+            if (!compareMinAutomaton) { showAlert("Aviso", "Execute a minimização."); return; }
+            const tbody = document.getElementById('cross-test-results-body');
+            tbody.innerHTML = '';
+
+            const testStrings = ["", "0", "1", "00", "01", "10", "11", "000", "001", "010", "011", "100", "101", "110", "111", "0101", "1100", "10101"];
+            let allMatch = true;
+
+            testStrings.forEach(w => {
+                let curr1 = initialStateId;
+                let valid1 = true;
+                for (let i = 0; i < w.length; i++) {
+                    const s = w[i];
+                    if (!alphabet.includes(s) || !transitions[curr1]?.[s]) { valid1 = false; break; }
+                    curr1 = transitions[curr1][s];
+                }
+                const res1 = valid1 && acceptingStateIds.includes(curr1);
+
+                let curr2 = compareMinAutomaton.initialState;
+                let valid2 = true;
+                for (let i = 0; i < w.length; i++) {
+                    const s = w[i];
+                    if (!compareMinAutomaton.alphabet.includes(s) || !compareMinAutomaton.transitions[curr2]?.[s]) { valid2 = false; break; }
+                    curr2 = compareMinAutomaton.transitions[curr2][s];
+                }
+                const res2 = valid2 && compareMinAutomaton.accepting.includes(curr2);
+
+                const match = (res1 === res2);
+                if (!match) allMatch = false;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-1 px-3 font-mono font-bold text-slate-700 dark:text-slate-300 text-xs">${w === "" ? "ε" : w}</td>
+                    <td class="py-1 px-3 text-xs"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${res1 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}">${res1 ? 'Aceita' : 'Rejeitada'}</span></td>
+                    <td class="py-1 px-3 text-xs"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${res2 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}">${res2 ? 'Aceita' : 'Rejeitada'}</span></td>
+                    <td class="py-1 px-3 text-center text-xs font-bold ${match ? 'text-emerald-500' : 'text-rose-500'}">${match ? '✓ Idêntico' : '✕ Diferente'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if (allMatch) showAlert("Equivalência Confirmada", "100% de equivalência comprovada nos 18 testes cruzados!");
+        }
+
+        // ----------------- EXEMPLOS PRÉ-CARREGADOS -----------------
+        const examples = {
+            classic6: {
+                alphabet: ['0', '1'],
+                states: [
+                    { id: 'A', x: 80, y: 130 },
+                    { id: 'B', x: 190, y: 70 },
+                    { id: 'C', x: 190, y: 220 },
+                    { id: 'D', x: 300, y: 70 },
+                    { id: 'E', x: 300, y: 220 },
+                    { id: 'F', x: 400, y: 140 }
+                ],
+                initialState: 'A',
+                accepting: ['C', 'D', 'E'],
+                transitions: {
+                    'A': { '0': 'B', '1': 'C' },
+                    'B': { '0': 'A', '1': 'D' },
+                    'C': { '0': 'E', '1': 'F' },
+                    'D': { '0': 'E', '1': 'F' },
+                    'E': { '0': 'E', '1': 'F' },
+                    'F': { '0': 'F', '1': 'F' }
+                }
+            },
+            parity6: {
+                alphabet: ['0', '1'],
+                states: [
+                    { id: 'qPar1', x: 80, y: 90 },
+                    { id: 'qPar2', x: 210, y: 90 },
+                    { id: 'qPar3', x: 340, y: 90 },
+                    { id: 'qImp1', x: 80, y: 220 },
+                    { id: 'qImp2', x: 210, y: 220 },
+                    { id: 'qImp3', x: 340, y: 220 }
+                ],
+                initialState: 'qPar1',
+                accepting: ['qPar1', 'qPar2', 'qPar3'],
+                transitions: {
+                    'qPar1': { '0': 'qImp1', '1': 'qPar2' },
+                    'qPar2': { '0': 'qImp2', '1': 'qPar3' },
+                    'qPar3': { '0': 'qImp3', '1': 'qPar1' },
+                    'qImp1': { '0': 'qPar1', '1': 'qImp2' },
+                    'qImp2': { '0': 'qPar2', '1': 'qImp3' },
+                    'qImp3': { '0': 'qPar3', '1': 'qImp1' }
+                }
+            },
+            mod3_7: {
+                alphabet: ['0', '1'],
+                states: [
+                    { id: 'q0_a', x: 70, y: 140 },
+                    { id: 'q1_a', x: 170, y: 70 },
+                    { id: 'q2_a', x: 170, y: 220 },
+                    { id: 'q0_b', x: 280, y: 140 },
+                    { id: 'q1_b', x: 380, y: 70 },
+                    { id: 'q2_b', x: 380, y: 220 },
+                    { id: 'qLixo', x: 460, y: 140 }
+                ],
+                initialState: 'q0_a',
+                accepting: ['q0_a', 'q0_b'],
+                transitions: {
+                    'q0_a': { '0': 'q0_b', '1': 'q1_a' },
+                    'q1_a': { '0': 'q2_a', '1': 'q0_a' },
+                    'q2_a': { '0': 'q1_a', '1': 'q2_b' },
+                    'q0_b': { '0': 'q0_a', '1': 'q1_b' },
+                    'q1_b': { '0': 'q2_b', '1': 'q0_b' },
+                    'q2_b': { '0': 'q1_b', '1': 'q2_a' },
+                    'qLixo': { '0': 'qLixo', '1': 'qLixo' }
+                }
+            },
+            minimal3: {
+                alphabet: ['0', '1'],
+                states: [
+                    { id: 'q0', x: 80, y: 140 },
+                    { id: 'q1', x: 220, y: 140 },
+                    { id: 'q2', x: 360, y: 140 }
+                ],
+                initialState: 'q0',
+                accepting: ['q2'],
+                transitions: {
+                    'q0': { '0': 'q0', '1': 'q1' },
+                    'q1': { '0': 'q0', '1': 'q2' },
+                    'q2': { '0': 'q2', '1': 'q2' }
+                }
+            }
+        };
+
+        function loadExample(key) {
+            saveHistory();
+            stopSimulation();
+            const ex = examples[key];
+            if (!ex) return;
+
+            alphabet = [...ex.alphabet];
+            document.getElementById('alphabet-input').value = alphabet.join(', ');
+
+            states = JSON.parse(JSON.stringify(ex.states));
+            initialStateId = ex.initialState;
+            acceptingStateIds = [...ex.accepting];
+            transitions = JSON.parse(JSON.stringify(ex.transitions));
+
+            centerGraphCoordinates();
+            buildStateTable();
+            redrawGraph();
+            recalculateMinimization();
+            saveToLocalStorage();
+        }
+
+        // ----------------- EXPORTAÇÕES -----------------
+        function exportToPNG(theme) {
+            if (states.length === 0) return;
+            const tempCanvas = document.createElement('canvas');
+            const dpr = 2;
+            tempCanvas.width = canvas.width * dpr; tempCanvas.height = canvas.height * dpr;
+            const tempCtx = tempCanvas.getContext('2d'); tempCtx.scale(dpr, dpr);
+            if (theme === 'dark') { tempCtx.fillStyle = '#020617'; tempCtx.fillRect(0, 0, canvas.width, canvas.height); }
+            else { tempCtx.fillStyle = '#ffffff'; tempCtx.fillRect(0, 0, canvas.width, canvas.height); }
+            drawGrid(tempCtx); drawTransitions(tempCtx, null); drawStates(tempCtx, null);
+            const link = document.createElement('a'); link.download = `afd-${theme}.png`; link.href = tempCanvas.toDataURL('image/png'); link.click();
+        }
+
+        function exportToTikZ() {
+            if (states.length === 0) return;
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            states.forEach(s => { if (s.x < minX) minX = s.x; if (s.x > maxX) maxX = s.x; if (s.y < minY) minY = s.y; if (s.y > maxY) maxY = s.y; });
+            const scale = 100.0;
+            let tikz = "\\begin{tikzpicture}[shorten >=1pt, node distance=2cm, on grid, auto, >=stealth,\n";
+            tikz += "    every state/.style={draw=slate-800, fill=white, minimum size=1cm},\n    initial text={}]\n\n";
+
+            states.forEach(node => {
+                const isInitial = (node.id === initialStateId);
+                const isFinal = acceptingStateIds.includes(node.id);
+                let opts = "state";
+                if (isInitial) opts += ", initial";
+                if (isFinal) opts += ", accepting";
+                const tx = ((node.x - minX) / scale).toFixed(2);
+                const ty = (-(node.y - minY) / scale).toFixed(2);
+                tikz += `  \\node[${opts}] (${node.id}) at (${tx}, ${ty}) {${node.id}};\n`;
+            });
+            tikz += "\n  \\path[->]\n";
+
+            const edgeGroups = {};
+            states.forEach(node => {
+                const trans = transitions[node.id] || {};
+                alphabet.forEach(sym => {
+                    const dest = trans[sym];
+                    if (dest) {
+                        const key = `${node.id}->${dest}`;
+                        if (!edgeGroups[key]) edgeGroups[key] = [];
+                        edgeGroups[key].push(sym);
+                    }
+                });
+            });
+
+            const keys = Object.keys(edgeGroups);
+            keys.forEach((key, idx) => {
+                const [from, to] = key.split("->");
+                const symbols = edgeGroups[key].join(", ");
+                const edgeOpts = (from === to) ? "loop above" : "bend left=10";
+                const endChar = (idx === keys.length - 1) ? ";" : "";
+                tikz += `    (${from}) edge[${edgeOpts}] node {${symbols}} (${to})${endChar}\n`;
+            });
+            tikz += "\\end{tikzpicture}";
+            openExportModal("Código LaTeX (TikZ)", tikz);
+        }
+
+        function exportTableToLaTeX() {
+            const data = computeMinimizationAlgorithm();
+            const sorted = data.reachableStates;
+            const n = sorted.length;
+            if (n <= 1) return;
+
+            let latex = "\\begin{table}[h!]\n\\centering\n\\begin{tabular}{|c|" + "c|".repeat(n - 1) + "}\n\\hline\n";
+            latex += " & " + sorted.slice(0, n - 1).map(s => s.id).join(" & ") + " \\\\\n\\hline\n";
+
+            for (let i = 1; i < n; i++) {
+                let row = `${sorted[i].id}`;
+                for (let j = 0; j < n - 1; j++) {
+                    if (j < i) {
+                        const p = sorted[i].id;
+                        const q = sorted[j].id;
+                        const pair = data.pairs.find(pObj => (pObj.p === p && pObj.q === q) || (pObj.p === q && pObj.q === p));
+                        if (pair && pair.marked) row += ` & $X_{${pair.step}}$`;
+                        else row += ` & $\\equiv$`;
+                    } else row += ` & `;
+                }
+                latex += row + " \\\\\n\\hline\n";
+            }
+            latex += "\\end{tabular}\n\\caption{Tabela de Distinguibilidade}\n\\end{table}";
+            openExportModal("Tabela de Distinguibilidade (LaTeX)", latex);
+        }
+
+        function exportTableToMarkdown() {
+            const data = computeMinimizationAlgorithm();
+            const sorted = data.reachableStates;
+            const n = sorted.length;
+            if (n <= 1) return;
+
+            let md = "| | " + sorted.slice(0, n - 1).map(s => `**${s.id}**`).join(" | ") + " |\n";
+            md += "|:---:|" + ":---:|".repeat(n - 1) + "\n";
+
+            for (let i = 1; i < n; i++) {
+                let row = `| **${sorted[i].id}** | `;
+                for (let j = 0; j < n - 1; j++) {
+                    if (j < i) {
+                        const p = sorted[i].id;
+                        const q = sorted[j].id;
+                        const pair = data.pairs.find(pObj => (pObj.p === p && pObj.q === q) || (pObj.p === q && pObj.q === p));
+                        if (pair && pair.marked) row += `X_${pair.step} | `;
+                        else row += `≡ | `;
+                    } else row += `  | `;
+                }
+                md += row + "\n";
+            }
+            openExportModal("Tabela de Distinguibilidade (Markdown)", md);
+        }
+
+        function openExportModal(title, code) {
+            document.getElementById('export-modal-title').textContent = title;
+            document.getElementById('latex-code-textarea').value = code;
+            document.getElementById('latex-export-modal').classList.remove('hidden');
+        }
+
+        function closeLatexModal() { document.getElementById('latex-export-modal').classList.add('hidden'); }
+        function copyLatexCode() {
+            const textarea = document.getElementById('latex-code-textarea');
+            textarea.select();
+            document.execCommand('copy');
+            const btn = document.getElementById('copy-latex-btn');
+            btn.textContent = "✓ Copiado!";
+            btn.className = "bg-emerald-500 text-white font-bold py-1.5 px-4 rounded-xl transition text-xs shadow-sm";
+            setTimeout(() => {
+                btn.textContent = "Copiar Código";
+                btn.className = "bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-1.5 px-4 rounded-xl transition text-xs shadow-sm";
+            }, 2000);
+        }
+
+        // ----------------- INICIALIZAÇÃO GERAL -----------------
+        window.addEventListener('load', () => {
+            initTheme();
+            setupCanvasSize();
+            if (!loadFromLocalStorage()) {
+                loadExample('classic6');
+            }
+            window.addEventListener('resize', () => {
+                setupCanvasSize();
+                redrawGraph();
+                if (currentMinTab === 'compare') redrawCompareCanvases();
+            });
+        });
+    </script>
+</body>
+</html>
