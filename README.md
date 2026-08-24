@@ -2,6 +2,8 @@
 
 > Um editor, simulador visual e minimizador interativo de alta fidelidade para **Autômatos Finitos Determinísticos (AFD)** com suporte completo ao **Algoritmo da Tabela de Distinguibilidade (Hopcroft/Moore)** e **Refinamento de Partições**.
 
+🌐 **Acesse online:** [https://rovanni.github.io/Modelador_Minimizacao_AFD/](https://rovanni.github.io/Modelador_Minimizacao_AFD/)
+
 Este projeto foi desenvolvido com foco em acessibilidade pedagógica, riqueza visual e rigor formal para apoiar professores e estudantes em cursos de **Teoria da Computação**, **Linguagens Formais e Autômatos** e **Compiladores**.
 
 O sistema opera 100% *client-side* no navegador web, sem necessidade de instalação, compiladores, servidores ou dependências externas!
