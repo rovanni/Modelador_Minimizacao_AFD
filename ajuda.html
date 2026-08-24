@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia de Ajuda e Tutorial Passo a Passo — Minimizador de AFD</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .title-font { font-family: 'Outfit', sans-serif; }
+        .code-font { font-family: 'Fira Code', monospace; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-slate-950 transition-colors duration-200">
+
+    <!-- Cabeçalho -->
+    <header class="border-b border-slate-200 dark:border-slate-900 bg-white/80 dark:bg-slate-900/60 backdrop-blur-md sticky top-0 z-40 p-4 transition-colors duration-200">
+        <div class="max-w-5xl mx-auto flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="bg-cyan-500/10 hover:bg-cyan-500/20 p-2.5 rounded-xl border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 transition" title="Voltar ao Modelador">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                </a>
+                <div>
+                    <h1 class="text-lg font-extrabold title-font tracking-wide text-cyan-600 dark:text-cyan-400">Guia de Ajuda & Tutorial Didático</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Aprenda a modelar, testar e minimizar autômatos de forma simples e intuitiva</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <a href="index.html" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-xl transition shadow-md shadow-cyan-500/20 flex items-center gap-1.5">
+                    <span>Abrir Simulador</span>
+                    <span>→</span>
+                </a>
+                <button onclick="toggleTheme()" class="p-2 rounded-xl bg-slate-200/60 dark:bg-slate-900 hover:bg-slate-300/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300/50 dark:border-slate-800 transition">
+                    🌓
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal do Guia -->
+    <main class="max-w-5xl w-full mx-auto p-4 sm:p-6 flex-grow flex flex-col gap-8 my-2 leading-relaxed">
+        
+        <!-- Apresentação Rápida / O que é um Autômato? -->
+        <section class="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/80 p-6 rounded-3xl shadow-sm">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="text-2xl">🤖</span>
+                <h2 class="text-xl font-bold title-font text-slate-800 dark:text-slate-100">1. O que é um Autômato Finito (AFD)?</h2>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-300 mb-4">
+                Pense em um <strong>Autômato Finito</strong> como uma máquina simples que segue regras bem definidas, exatamente como uma <strong>catraca de metrô</strong> ou uma <strong>máquina de refrigerantes</strong>:
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div class="p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+                    <div class="font-bold text-cyan-600 dark:text-cyan-400 text-sm flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-cyan-500"></span> Estados (Círculos)
+                    </div>
+                    <p class="text-slate-500 dark:text-slate-400">
+                        Representam a "situação" em que a máquina está no momento (por exemplo: <em>Bloqueada</em> ou <em>Liberada</em>).
+                    </p>
+                </div>
+                <div class="p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+                    <div class="font-bold text-indigo-600 dark:text-indigo-400 text-sm flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-indigo-500"></span> Transições (Setas)
+                    </div>
+                    <p class="text-slate-500 dark:text-slate-400">
+                        Ações que fazem a máquina mudar de estado ao receber um símbolo (ex: <em>Inserir moeda</em> ou <em>Empurrar catraca</em>).
+                    </p>
+                </div>
+                <div class="p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+                    <div class="font-bold text-emerald-600 dark:text-emerald-400 text-sm flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500"></span> Estado Final (Círculo Duplo)
+                    </div>
+                    <p class="text-slate-500 dark:text-slate-400">
+                        Se a máquina terminar seu processamento em um círculo duplo, a palavra/ação foi <strong>aceita com sucesso</strong>!
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Por que Minimizar? -->
+        <section class="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/80 p-6 rounded-3xl shadow-sm">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="text-2xl">⚡</span>
+                <h2 class="text-xl font-bold title-font text-slate-800 dark:text-slate-100">2. Por que e como funciona a Minimização?</h2>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">
+                Muitas vezes desenhamos autômatos com mais estados do que o necessário (estados repetidos, redundantes ou que nunca são alcançados).
+                <strong>Minimizar um AFD</strong> significa encontrar o autômato <strong>mais enxuto e perfeito possível</strong> que faz exatamente a mesma tarefa gastando o menor número de estados!
+            </p>
+
+            <div class="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl text-xs text-slate-700 dark:text-slate-300 space-y-2">
+                <p><strong>As duas etapas da Minimização:</strong></p>
+                <ol class="list-decimal list-inside space-y-1.5 ml-1">
+                    <li><strong>Eliminar Inalcançáveis:</strong> Remove círculos que nenhuma seta consegue atingir a partir do estado inicial.</li>
+                    <li><strong>Fundir Estados Equivalentes:</strong> Se dois estados <span class="font-mono font-bold">(p, q)</span> reagem de forma 100% idêntica para todas as entradas possíveis, eles são fundidos em um único estado!</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- Como Usar o Aplicativo Passo a Passo -->
+        <section class="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/80 p-6 rounded-3xl shadow-sm flex flex-col gap-6">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">🎮</span>
+                <h2 class="text-xl font-bold title-font text-slate-800 dark:text-slate-100">3. Passo a Passo: Como Usar a Ferramenta</h2>
+            </div>
+
+            <!-- Etapa 1 -->
+            <div class="flex items-start gap-4 p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <div class="w-8 h-8 rounded-xl bg-cyan-500 text-slate-950 font-extrabold flex items-center justify-center text-sm shrink-0">1</div>
+                <div class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                    <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">Carregue um Exemplo ou Desenhe seu Próprio Grafo</h3>
+                    <p>No topo da tela, clique em um dos botões de exemplo (como <strong>"Clássico (6 nós)"</strong> ou <strong>"Paridade Redundante"</strong>).</p>
+                    <p>Se preferir desenhar do zero:</p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-500 dark:text-slate-400">
+                        <li><strong>Duplo clique no espaço vazio:</strong> Cria um novo estado.</li>
+                        <li><strong>Duplo clique sobre um nó:</strong> Transforma-o em Estado Final (círculo duplo).</li>
+                        <li><strong>Segure Shift e arraste de um nó ao outro:</strong> Cria uma conexão/transição.</li>
+                        <li><strong>Botão direito no nó:</strong> Abre o menu para marcar como Inicial ou Renomear.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Etapa 2 -->
+            <div class="flex items-start gap-4 p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <div class="w-8 h-8 rounded-xl bg-cyan-500 text-slate-950 font-extrabold flex items-center justify-center text-sm shrink-0">2</div>
+                <div class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                    <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">Acompanhe a Tabela Triangular de Distinguibilidade</h3>
+                    <p>Na coluna da direita, você verá uma tabela em formato de escada (triangular) com todos os pares de estados <span class="font-mono font-bold">(p, q)</span>:</p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-500 dark:text-slate-400">
+                        <li>Clique em <strong>"▶ Executar Passo a Passo"</strong> ou <strong>"⏩ Avançar"</strong> para ver a tabela sendo preenchida.</li>
+                        <li>Observe que os nós correspondentes <strong>se acendem no Grafo (à esquerda) em tempo real</strong>, com uma explicação abaixo de por que eles foram marcados!</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Etapa 3 -->
+            <div class="flex items-start gap-4 p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <div class="w-8 h-8 rounded-xl bg-cyan-500 text-slate-950 font-extrabold flex items-center justify-center text-sm shrink-0">3</div>
+                <div class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                    <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">O que significam os símbolos na Tabela?</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                        <div class="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                            <span class="font-bold text-rose-500 font-mono text-sm">X₀</span>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Um dos estados é final e o outro não é (são 0-distinguíveis de imediato).</p>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                            <span class="font-bold text-amber-500 font-mono text-sm">X₁ (0)</span>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Marcado na iteração 1 pelo símbolo '0', pois suas transições levaram a estados já distinguidos.</p>
+                        </div>
+                        <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                            <span class="font-bold text-emerald-500 font-mono text-sm">≡</span>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5"><strong>Equivalentes!</strong> Nunca puderam ser distinguidos; serão fundidos em um só nó.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Etapa 4 -->
+            <div class="flex items-start gap-4 p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <div class="w-8 h-8 rounded-xl bg-cyan-500 text-slate-950 font-extrabold flex items-center justify-center text-sm shrink-0">4</div>
+                <div class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                    <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">Modo Exercício / Desafio (Para Alunos e Treinamento)</h3>
+                    <p>Quer treinar para uma prova ou desafio?</p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-500 dark:text-slate-400">
+                        <li>Marque a caixinha <strong>"Modo Exercício"</strong>.</li>
+                        <li>Clique você mesmo nas células da tabela para marcar onde deve haver ✕.</li>
+                        <li>Clique em <strong>"✔ Verificar Minha Tabela"</strong> para receber uma nota percentual (0 a 100%) e correção imediata!</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Etapa 5 -->
+            <div class="flex items-start gap-4 p-4 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <div class="w-8 h-8 rounded-xl bg-cyan-500 text-slate-950 font-extrabold flex items-center justify-center text-sm shrink-0">5</div>
+                <div class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                    <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">Aplique o Resultado ou Exporte para Trabalhos</h3>
+                    <ul class="list-disc list-inside space-y-1 text-slate-500 dark:text-slate-400">
+                        <li>Clique em <strong>"✨ Substituir Grafo pelo AFD Minimizado"</strong> para redesenhar a tela com os nós fundidos.</li>
+                        <li>Clique em <strong>"LaTeX"</strong> ou <strong>"MD"</strong> para copiar a tabela triangular formatada e colar diretamente no seu artigo ou lista de exercícios.</li>
+                        <li>Na aba <strong>"Comparação"</strong>, clique em <strong>"🧪 Testar 18 Cadeias"</strong> para provar que o autômato original e o minimizado aceitam as mesmas palavras!</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Perguntas Frequentes (FAQ) -->
+        <section class="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/80 p-6 rounded-3xl shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="text-2xl">💡</span>
+                <h2 class="text-xl font-bold title-font text-slate-800 dark:text-slate-100">4. Perguntas Frequentes (FAQ)</h2>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <details class="p-3.5 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800 cursor-pointer">
+                    <summary class="font-bold text-slate-800 dark:text-slate-100">Por que um estado com borda pontilhada amarela aparece?</summary>
+                    <p class="mt-2 text-slate-500 dark:text-slate-400">
+                        Significa que ele é um <strong>estado inalcançável</strong> (nenhuma transição consegue chegar até ele a partir do estado inicial). Você pode removê-lo clicando no botão "🧹 Remover Estados Inalcançáveis" na aba de Diagnóstico.
+                    </p>
+                </details>
+
+                <details class="p-3.5 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800 cursor-pointer">
+                    <summary class="font-bold text-slate-800 dark:text-slate-100">O que significa o símbolo ε (Épsilon)?</summary>
+                    <p class="mt-2 text-slate-500 dark:text-slate-400">
+                        Representa a palavra vazia (cadeia de comprimento zero). Na tabela, $X_0 (\varepsilon)$ significa que os estados já foram distinguidos pela própria palavra vazia (um aceita e o outro rejeita).
+                    </p>
+                </details>
+
+                <details class="p-3.5 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800 cursor-pointer">
+                    <summary class="font-bold text-slate-800 dark:text-slate-100">Meus dados são perdidos se eu fechar o navegador?</summary>
+                    <p class="mt-2 text-slate-500 dark:text-slate-400">
+                        Não! Todo o seu progresso é salvo automaticamente na memória local do seu navegador (LocalStorage). Você também pode clicar em <strong>"JSON"</strong> no topo para salvar um arquivo no seu computador.
+                    </p>
+                </details>
+            </div>
+        </section>
+
+        <!-- Botão para voltar à aplicação -->
+        <div class="text-center py-4">
+            <a href="index.html" class="inline-flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-extrabold text-sm px-8 py-3.5 rounded-2xl transition shadow-lg shadow-cyan-500/25">
+                <span>🚀 Começar a Usar o Simulador Agora</span>
+            </a>
+        </div>
+
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="border-t border-slate-200 dark:border-slate-900 bg-white dark:bg-slate-950/80 p-4 text-center text-xs text-slate-400 dark:text-slate-500">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>© <span id="year-display"></span> — Modelador e Minimizador de AFD.</p>
+            <p>Professor Msc. Luciano R. Nascimento • UENP</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('year-display').textContent = new Date().getFullYear();
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.remove('dark');
+        } else {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>
